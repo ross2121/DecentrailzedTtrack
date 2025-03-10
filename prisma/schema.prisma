@@ -29,6 +29,6 @@ model Challenge{
   Amount    String
   Digital_Currency String
   days   String
-  user   User @relation(fields: [id],references: [userid])
+  user   User @relation(fields: [userid],references: [id])
 }
 
