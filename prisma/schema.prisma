@@ -16,7 +16,10 @@ model User{
   id   String @unique @id @default(uuid())
   name String
   email String @unique
+  username String
   password String
+  publickey String
+  privatekey String
   challenge Challenge[]
 }
 model Challenge{
