@@ -29,8 +29,9 @@ model Challenge{
   memberqty Int
   members  String[]
   userid    String
-  Dailystep  String
-  Amount    String
+  Dailystep  Int
+  Amount    Int
+  Totalamount  Int
   Digital_Currency String
   days   String
   user   User @relation(fields: [userid],references: [id])
