@@ -16,6 +16,7 @@ model User{
   id   String @unique @id @default(uuid())
   name String
   email String @unique
+  step    Steps[]  
   username String
   password String
   publickey String
@@ -34,4 +35,11 @@ model Challenge{
   days   String
   user   User @relation(fields: [userid],references: [id])
 }
-
+model Steps{
+  id  String @id  @default(uuid())
+  steps String
+  day   String
+  userid String
+  user   User @relation(references: [id],fields: [userid])
+}
+ 

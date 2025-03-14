@@ -4,13 +4,14 @@ import jwt from "jsonwebtoken";
 import  { Keypair } from "@solana/web3.js"
 import { UserSchema } from "./type";
 import bcrypt from "bcrypt"
+import assert from "assert";
+import crypto from "crypto"
 const router=Router();
 const prisma=new PrismaClient();
 router.post("/register",async(req,res:any)=>{
     const {username,name,email,password}=req.body;
     const verify=UserSchema.safeParse({username,name,email,password});
-
-    if(verify.error){
+    if(!verify.success){
         res.json({message:"Provided detail are not valid"},{status:400});
     }
     const unique=await prisma.user.findUnique({
@@ -19,19 +20,33 @@ router.post("/register",async(req,res:any)=>{
         }
     }) 
     if(unique){
+      
         res.json({message:"User alredy register",status:400});
     }
     const keypair= Keypair.generate();
+//     const nonce=crypto.randomBytes(16);
+//     const tex="password";
+//     let ciphertex;
+// crypto.pbkdf2(tex, 'salt', 100000, 16, 'sha256', (err:any, derivedKey:any) => {
+//     if (err) throw err;
+//     const cipher = crypto.createCipheriv("aes-128-gcm", derivedKey, nonce);
+//      ciphertex = Buffer.concat([cipher.update(keypair.secretKey.toString()), cipher.final()]);
+//     const authTag = cipher.getAuthTag();  
+//     console.log(ciphertex);
+//     console.log(authTag);
+// });
+// if(!ciphertex){
+//     return;
+// }
     const salt=await bcrypt.genSalt(10);
     const hashpassword=await bcrypt.hash(password,salt);
-    const hashedprivatekey=await bcrypt.hash(keypair.secretKey.toString(),salt);
     const user=await prisma.user.create({
         data:{
             name,
             email,
             password:hashpassword,
             publickey:keypair.publicKey.toBase58() ,
-             privatekey:hashedprivatekey,
+             privatekey:keypair.secretKey.toString(),
             username
         }
     }) 
