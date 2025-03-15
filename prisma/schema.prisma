@@ -17,10 +17,12 @@ model User{
   name String
   email String @unique
   step    Steps[]  
-  username String
+  username String  @unique
   password String
   publickey String
   privatekey String
+  Friends     String[]
+  Request      String[]
   challenge Challenge[]
 }
 model Challenge{
@@ -34,6 +36,7 @@ model Challenge{
   Totalamount  Int
   Digital_Currency String
   days   String
+  type    Challengetype @default(public) 
   user   User @relation(fields: [userid],references: [id])
 }
 model Steps{
@@ -42,5 +45,9 @@ model Steps{
   day   String
   userid String
   user   User @relation(references: [id],fields: [userid])
+}
+enum Challengetype{
+  public
+  private
 }
  
