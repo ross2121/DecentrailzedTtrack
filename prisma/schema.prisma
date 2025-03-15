@@ -24,6 +24,7 @@ model User{
   Friends     String[]
   Request      String[]
   challenge Challenge[]
+  Notification String[]
 }
 model Challenge{
   id String @unique @id @default(uuid())
@@ -38,6 +39,7 @@ model Challenge{
   days   String
   type    Challengetype @default(public) 
   user   User @relation(fields: [userid],references: [id])
+  Request  String[]
 }
 model Steps{
   id  String @id  @default(uuid())

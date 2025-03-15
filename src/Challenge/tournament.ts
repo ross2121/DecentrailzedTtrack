@@ -1,5 +1,5 @@
 import express from "express";
-import { Router } from "express";
+import e, { Router } from "express";
 import { challenge } from "../Auth/type";
 import { PrismaClient } from "@prisma/client";
 import dotenv from "dotenv";
@@ -67,11 +67,10 @@ router.post("/challenge/join/:id",async(req:any,res:any)=>{
         res.json({message:"No user found"});
         return;
     }
-    const privateKeyArray = user.privatekey.split(',').map(num => parseInt(num, 10));
-    const uintprivat=new Uint8Array(privateKeyArray);
-    const secretkey=Keypair.fromSecretKey(uintprivat);
-    const sendtrasaction=await sendAndConfirmTransaction(connection,decoded,[secretkey]);
-    const status=await connection.getParsedTransaction(sendtrasaction);
+    const trx=await recivetransaction(user.privatekey,decoded); 
+    if(!trx){
+        return res.json({message:"Transaction failed"});
+    }
     const challenge=await prisma.challenge.findUnique({
         where:{
             id
@@ -134,6 +133,10 @@ router.post("/regular/update",async(req:any,res:any)=>{
 router.post("/challenge/finish",async(req:any,res:any)=>{
     const {id}=req.body;
     const privatekey=process.env.PRIVATE_KEY;
+    if(!privatekey){
+        res.json({message:"No private key found"},{status:400});
+        return;
+    }
     const challengee=await prisma.challenge.findUnique({
         where:{
             id
@@ -144,7 +147,6 @@ router.post("/challenge/finish",async(req:any,res:any)=>{
         return;
     }
     const equalamount=challengee?.members.length/challengee?.Totalamount;
-    // @ts-ignore
     for(let i=0;i<challengee?.members.length;i++){
          const user=await prisma.user.findUnique({
             where:{
@@ -158,15 +160,7 @@ router.post("/challenge/finish",async(req:any,res:any)=>{
          if(!challengee?.Totalamount){
             return;
          }
-         const encoder=new TextEncoder();
-         const encoded=encoder.encode(privatekey);
-         const keypair=Keypair.fromSecretKey(encoded);
-         const transaction=new  Transaction().add(SystemProgram.transfer({
-            fromPubkey:keypair.publicKey,
-            toPubkey:new PublicKey(user.publickey),
-            lamports:equalamount*LAMPORTS_PER_SOL
-         }))
-         const send=await connection.sendTransaction(transaction,[keypair]);
+        const send= await sendtrasaction(privatekey,user.publickey,equalamount); 
          if(send){
             challengee.Totalamount-=challengee?.Amount;  
          }
@@ -174,5 +168,126 @@ router.post("/challenge/finish",async(req:any,res:any)=>{
     }
     res.json({message:"contest Ended Succefully"});
 })
+router.post("/challenge/private",async(req:any,res:any)=>{   
+    const {userid,Amount,Digital_Currency,days,Dailystep,memberqty,name,members}=req.body;
+    const user=await prisma.user.findUnique({
+        where:{
+            id:userid
+        }
+    })
+    if(!user){
+        res.json({message:"No user found for paticular id"});
+    }
+   await prisma.challenge.create({
+    data:{
+        userid:userid,
+        Amount,
+        Digital_Currency,
+        Dailystep,
+        days,
+        memberqty,
+        Totalamount:0,
+        type:"private",
+        members:[],
+        name,
+        Request:members
+    }
+   })  
+    res.json({message:"Challenge created succefull"});   
+})
+router.post("/challenge/acceptchallenge",async(req:any,res:any)=>{
+    const {chaalengeid,userid,username,tx}=req.body;
+    const decoded=Transaction.from(tx);
+    if(!chaalengeid||!userid||!username){
+        res.json({message:"No challenge or userid username found"});
+    }
+    const challenge=await prisma.challenge.findUnique({
+        where:{
+            id:chaalengeid
+        }
+    })
+    const user=await prisma.user.findUnique({
+        where:{
+            username
+        }
+    })
+    if(!user){
+        return res.json({message:"No user find"});
+
+    }
+    if(!chaalengeid){
+        res.json({message:"No challenge found for pricular that particular id"});
+        return;
+    }
+    if(!challenge?.Request[username]){
+        res.json({message:"You were not added to the Challenge Kindly ask the user to add you to challenge"});
+        return;
+    }
+    const txs=await recivetransaction(user.privatekey,decoded);
+    if(!txs){
+        return res.json({message:"Transactio failed"});
+    }  
+    challenge.Request.filter((user)=>user!==username);
+    challenge.members.push(username);
+    res.json({message:"User added succe"})
+})
+router.post("/challenge/private/finish",async(req,res)=>{
+    const {id}=req.body;
+    const privatekey=process.env.PRIVATE_KEY;
+    if(!privatekey){
+        res.json({message:"No private key found"});
+        return;
+    }
+    const challengee=await prisma.challenge.findUnique({
+        where:{
+            id
+        }
+    })
+    if(!challengee){
+        res.json({message:"No challenge found"});
+        return;
+    }
+    const equalamount=challengee?.members.length/challengee?.Totalamount;
+    for(let i=0;i<challengee?.members.length;i++){
+         const user=await prisma.user.findUnique({
+            where:{
+                id:challengee?.members[i]
+            }
+         }) 
+         if(!user){
+            res.json({message:"No user found"});
+            return;
+         }
+         if(!challengee?.Totalamount){
+            return;
+         }
+        const send= await sendtrasaction(privatekey,user.publickey,equalamount); 
+         if(send){
+            challengee.Totalamount-=challengee?.Amount;  
+         }
+         console.log(send); 
+    }
+    res.json({message:"contest Ended Succefully"});
+
+})
+async function sendtrasaction(privatekey:string,publicKey:string,Amount:number){
+    const encoder=new TextEncoder();
+    const encoded=encoder.encode(privatekey);
+    const keypair=Keypair.fromSecretKey(encoded);
+    const transaction=new  Transaction().add(SystemProgram.transfer({
+       fromPubkey:keypair.publicKey,
+       toPubkey:new PublicKey(publicKey),
+       lamports:Amount*LAMPORTS_PER_SOL
+    }))
+    const send=await connection.sendTransaction(transaction,[keypair]);
+    return send;
+}
+async function recivetransaction(privatekey:string,decoded:Transaction){
+    const privateKeyArray = privatekey.split(',').map(num => parseInt(num, 10));
+    const uintprivat=new Uint8Array(privateKeyArray);
+    const secretkey=Keypair.fromSecretKey(uintprivat);
+    const sendtrasaction=await sendAndConfirmTransaction(connection,decoded,[secretkey]);
+    return sendtrasaction;
+}
 export const challenges=router;
 
