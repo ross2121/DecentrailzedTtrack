@@ -12,7 +12,7 @@ router.post("/register",async(req,res:any)=>{
     const {username,name,email,password}=req.body;
     const verify=UserSchema.safeParse({username,name,email,password});
     if(!verify.success){
-        res.json({message:"Provided detail are not valid"},{status:400});
+        return res.json({message:"Provided detail are not valid"});
     }
     const unique=await prisma.user.findUnique({
         where:{
@@ -20,8 +20,7 @@ router.post("/register",async(req,res:any)=>{
         }
     }) 
     if(unique){
-      
-        res.json({message:"User alredy register",status:400});
+        return res.json({message:"User alredy register"});
     }
     const keypair= Keypair.generate();
 //     const nonce=crypto.randomBytes(16);
@@ -51,7 +50,7 @@ router.post("/register",async(req,res:any)=>{
         }
     }) 
     const token=jwt.sign({id:user.id},"JWTTOKEN",{expiresIn:365});
-    res.json({token,user,status:200});
+    return res.json({token,user});
 })
 router.post("/signin",async(req,res)=>{
     const {email,password}=req.body;

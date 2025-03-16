@@ -7,8 +7,8 @@ export const challenge = z.object({
   Amount: z.number().positive("Amount must be a positive number"),
   Digital_Currency: z.string().min(1, "Digital currency is required"),
   days: z.number().int().positive("Days must be a positive integer"),
-  userid: z.string().uuid("Invalid user ID format"),
-  members: z.array(z.string().uuid()).default([]), // Ensuring members are stored as an array of user IDs
+  // userid: z.string(),
+  members: z.array(z.string()).default([]),
 });
 export const UserSchema = z.object({
     username: z.string().min(3, "Username must be at least 3 characters long"),

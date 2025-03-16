@@ -20,7 +20,7 @@ model User{
   username String  @unique
   password String
   publickey String
-  privatekey String
+  privatekey Bytes
   Friends     String[]
   Request      String[]
   challenge Challenge[]
@@ -36,7 +36,7 @@ model Challenge{
   Amount    Int
   Totalamount  Int
   Digital_Currency String
-  days   String
+  days   Int
   type    Challengetype @default(public) 
   user   User @relation(fields: [userid],references: [id])
   Request   String[]

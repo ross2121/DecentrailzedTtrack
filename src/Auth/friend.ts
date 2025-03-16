@@ -23,8 +23,41 @@ router.post("/add/friend",async(req:any,res:any)=>{
    if(!user){
     res.json({message:"No user found"});
    }
-   user?.Request.push(userid);
+   await prisma.user.update({
+    where:{
+        id:userid
+    },data:{
+        Request:{
+            push:username,
+        }
+    }
+   })   
+    await prisma.user.update({
+        where:{
+            username:username
+        },data:{
+            Request:{
+                push:users?.username
+            }
+        }
+    })
    res.json({message:"Requested send to you friend"});
+})
+router.get("/friend/request/:id",async(req:any,res:any)=>{
+    const id=req.params.id;
+    if(!id){
+        return res.json({message:"No id found"});
+    }
+    const user=await prisma.user.findUnique({
+        where:{
+            id
+        }
+    })
+    if(!user){
+        return res.json({message:"No user found"});
+    }
+  return res.json({message:user.Request});
+
 })
 router.post("/accept/friend",async(req:any,res:any)=>{
     const  {userid,username,bool}=req.body;
