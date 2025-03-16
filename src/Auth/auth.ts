@@ -72,6 +72,6 @@ router.post("/signin",async(req,res)=>{
        res.json({message:"Password dont match"});
     }
     const token=jwt.sign({id:user.id},"JWTOKEN");
-    res.json({token});
+    res.json({token,user});
 })
 export const userrouter=router;

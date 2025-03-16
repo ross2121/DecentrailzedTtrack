@@ -35,7 +35,6 @@ router.post("/create/challenge",async(req:any,res:any)=>{
 })
 router.get("/challenge/:id",async(req:any,res:any)=>{
     const id=req.query;
-
    const challenge=await prisma.challenge.findUnique({
     where:{
         id:id
@@ -51,6 +50,32 @@ router.get("/challenge",async(req:any,res:any)=>{
     const allchalange=await prisma.challenge.findMany({
     })
     res.json({allchalange});
+})
+router.get("/challenge/:userid",async(req:any,res:any)=>{
+    const userid=req.params.userid;
+    if(!userid){
+        res.json({message:"No user id found"});
+    }
+    const user=await prisma.user.findUnique({
+        where:{
+            id:userid
+        },include:{
+            challenge:true
+        }
+    })
+    if(!user){
+        res.json({message:"No user found"});
+    }
+    return res.json({user});
+    
+
+})
+router.get("/participated/:userid",async(req:any,res:any)=>{
+    const userid=req.params.userid;
+    if(!userid){
+        res.json({message:"No user found"});
+    }
+    
 })
 router.post("/challenge/join/:id",async(req:any,res:any)=>{
     const id=req.query.id;
@@ -81,6 +106,7 @@ router.post("/challenge/join/:id",async(req:any,res:any)=>{
         return;
     }
     challenge?.members.push(user.id);
+    
     challenge.Totalamount+=challenge?.Amount;
    res.json({message:"Added to the contest"},{challenge});
 })
