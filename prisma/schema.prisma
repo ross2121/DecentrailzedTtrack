@@ -20,11 +20,14 @@ model User{
   username String  @unique
   password String
   publickey String
-  privatekey Bytes
+  privatekey String
   Friends     String[]
   Request      String[]
   challenge Challenge[]
   Notification String[]
+  Participated   String[]
+  HistoryParticipated String[]
+  HistoryCreated   String[]
 }
 model Challenge{
   id String @unique @id @default(uuid())
@@ -40,6 +43,7 @@ model Challenge{
   type    Challengetype @default(public) 
   user   User @relation(fields: [userid],references: [id])
   Request   String[]
+  PayoutStatus String
 }
 model Steps{
   id  String @id  @default(uuid())

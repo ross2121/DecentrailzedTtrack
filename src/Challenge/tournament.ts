@@ -42,19 +42,19 @@ router.get("/challenge/:id",async(req:any,res:any)=>{
    })
   
    if(!challenge){
-      res.json({message:"No challenge found for a particular id"},{status:400});
+    return  res.status(400).json({message:"No challenge found for a particular id"},{status:400});
    }
-   res.json({challenge},{status:200});
+   return res.status(200).json({challenge});
 })
 router.get("/challenge",async(req:any,res:any)=>{
     const allchalange=await prisma.challenge.findMany({
     })
-    res.json({allchalange});
+    return res.status(200).json({allchalange});
 })
 router.get("/challenge/:userid",async(req:any,res:any)=>{
     const userid=req.params.userid;
     if(!userid){
-        res.json({message:"No user id found"});
+       return  res.status(400).json({message:"No user id found"});
     }
     const user=await prisma.user.findUnique({
         where:{
@@ -64,9 +64,9 @@ router.get("/challenge/:userid",async(req:any,res:any)=>{
         }
     })
     if(!user){
-        res.json({message:"No user found"});
+       return res.status(400).json({message:"No user found"});
     }
-    return res.json({user});
+    return res.status(200).json({user});
     
 
 })
@@ -75,7 +75,15 @@ router.get("/participated/:userid",async(req:any,res:any)=>{
     if(!userid){
         res.json({message:"No user found"});
     }
-    
+   const user=await prisma.challenge.findMany({
+    where:{
+         members:userid 
+    }
+   })
+   if(!user){
+
+   } 
+   return res.status(200).json({message:user})
 })
 router.post("/challenge/join/:id",async(req:any,res:any)=>{
     const id=req.params.id;
@@ -153,6 +161,9 @@ router.post("/step/update",async(req:any,res:any)=>{
         }
     }) 
    return res.status(200).json({steps});
+})
+router.post("/send",async(req:any,res:any)=>{
+
 })
 router.post("/regular/update",async(req:any,res:any)=>{
     const {steps,userid}=req.body;
@@ -241,7 +252,7 @@ router.post("/challenge/private",async(req:any,res:any)=>{
         Request:members
     }
    })  
-    res.json({message:"Challenge created succefull"});   
+   return  res.json({message:"Challenge created succefull"});   
 })
 router.post("/challenge/acceptchallenge",async(req:any,res:any)=>{
     const {chaalengeid,userid,username,tx}=req.body;
@@ -279,14 +290,14 @@ router.post("/challenge/acceptchallenge",async(req:any,res:any)=>{
     challenge.members.push(username);
     res.json({message:"User added succe"})
 })
-router.post("/challenge/private/finish",async(req,res)=>{
+router.post("/challenge/private/finish",async(req:any,res:any)=>{
     const {id}=req.body;
     const privatekey=process.env.PRIVATE_KEY;
     if(!privatekey){
         res.json({message:"No private key found"});
         return;
     }
-    const challengee=await prisma.challenge.findUnique({
+    try{const challengee=await prisma.challenge.findUnique({
         where:{
             id
         }
@@ -296,26 +307,40 @@ router.post("/challenge/private/finish",async(req,res)=>{
         return;
     }
     const equalamount=challengee?.members.length/challengee?.Totalamount;
-    for(let i=0;i<challengee?.members.length;i++){
-         const user=await prisma.user.findUnique({
-            where:{
-                id:challengee?.members[i]
+    await prisma.$transaction(async(prisma)=>{
+        for(let i=0;i<challengee?.members.length;i++){
+            const user=await prisma.user.findUnique({
+               where:{
+                   id:challengee?.members[i]
+               }
+            }) 
+            if(!user){
+               res.json({message:"No user found"});
+               return;
             }
-         }) 
-         if(!user){
-            res.json({message:"No user found"});
-            return;
-         }
-         if(!challengee?.Totalamount){
-            return;
-         }
-        const send= await sendtrasaction(privatekey,user.publickey,equalamount); 
-         if(send){
-            challengee.Totalamount-=challengee?.Amount;  
-         }
-         console.log(send); 
+            if(!challengee?.Totalamount){
+               return;
+            }
+           const send= await sendtrasaction(privatekey,user.publickey,equalamount); 
+            if(send){
+               challengee.Totalamount-=challengee?.Amount;  
+            }
+            await prisma.challenge.update({
+                where:{
+                    id
+                },data:{
+                    Totalamount: challengee.Totalamount - equalamount
+                }
+            })
+            console.log(send);  
+        }
+    })
+    return res.json({message:"contest Ended Succefully"});
+}catch(e:any){
+    console.error("Error during payout:", e);
+    return res.status(500).json({ message: "Failed to complete payout", error: e.message });       
     }
-    res.json({message:"contest Ended Succefully"});
+   
 
 })
 async function sendtrasaction(privatekey:string,publicKey:string,Amount:number){

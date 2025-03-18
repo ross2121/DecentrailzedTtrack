@@ -12,7 +12,7 @@ router.post("/register",async(req,res:any)=>{
     const {username,name,email,password}=req.body;
     const verify=UserSchema.safeParse({username,name,email,password});
     if(!verify.success){
-        return res.json({message:"Provided detail are not valid"});
+        return res.status(400).json({message:"Provided detail are not valid"});
     }
     const unique=await prisma.user.findUnique({
         where:{
@@ -20,7 +20,7 @@ router.post("/register",async(req,res:any)=>{
         }
     }) 
     if(unique){
-        return res.json({message:"User alredy register"});
+        return res.status(400).json({message:"User alredy register"});
     }
     const keypair= Keypair.generate();
 //     const nonce=crypto.randomBytes(16);
@@ -50,12 +50,12 @@ router.post("/register",async(req,res:any)=>{
         }
     }) 
     const token=jwt.sign({id:user.id},"JWTTOKEN",{expiresIn:365});
-    return res.json({token,user});
+    return res.status(200).json({token,user});
 })
 router.post("/signin",async(req,res)=>{
     const {email,password}=req.body;
     if(!email||!password){
-        res.json({message:"Kindly provide the  required detail", status:400},)
+        res.status(200).json({message:"Kindly provide the  required detail", status:400},)
     }
     const user=await prisma.user.findUnique({
         where:{
@@ -63,7 +63,7 @@ router.post("/signin",async(req,res)=>{
         }
     })
     if(!user){
-        res.json({message:"No user find kindly register",status:400});
+        res.status(200).json({message:"No user find kindly register",status:400});
         return;
     }
     const comparepassword=bcrypt.compareSync(password,user?.password);
@@ -71,6 +71,6 @@ router.post("/signin",async(req,res)=>{
        res.json({message:"Password dont match"});
     }
     const token=jwt.sign({id:user.id},"JWTOKEN");
-    res.json({token,user});
+    return res.stauts(200).json({token,user});
 })
 export const userrouter=router;
