@@ -39,18 +39,28 @@ router.post("/register",async(req,res:any)=>{
 // }
     const salt=await bcrypt.genSalt(10);
     const hashpassword=await bcrypt.hash(password,salt);
-    const user=await prisma.user.create({
-        data:{
-            name,
-            email,
-            password:hashpassword,
-            publickey:keypair.publicKey.toBase58() ,
-             privatekey:keypair.secretKey.toString(),
-            username
-        }
-    }) 
-    const token=jwt.sign({id:user.id},"JWTTOKEN",{expiresIn:365});
-    return res.status(200).json({token,user});
+    await prisma.$transaction(async(prisma)=>{
+        const user=await prisma.user.create({
+            data:{
+                name,
+                email,
+                password:hashpassword,
+                publickey:keypair.publicKey.toBase58() ,
+                 privatekey:keypair.secretKey.toString(),
+                username
+            }
+        }) 
+        await prisma.steps.create({
+            data:{
+                userid:user.id,
+                steps:"0",
+                day:new Date().toISOString()  
+            }
+        })
+        const token=jwt.sign({id:user.id},"JWTTOKEN",{expiresIn:365});
+        return res.status(200).json({token,user});
+    })
+    
 })
 router.post("/signin",async(req:any,res:any)=>{
     const {email,password}=req.body;
