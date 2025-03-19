@@ -52,7 +52,7 @@ router.post("/register",async(req,res:any)=>{
     const token=jwt.sign({id:user.id},"JWTTOKEN",{expiresIn:365});
     return res.status(200).json({token,user});
 })
-router.post("/signin",async(req,res)=>{
+router.post("/signin",async(req:any,res:any)=>{
     const {email,password}=req.body;
     if(!email||!password){
         res.status(200).json({message:"Kindly provide the  required detail", status:400},)
@@ -71,6 +71,6 @@ router.post("/signin",async(req,res)=>{
        res.json({message:"Password dont match"});
     }
     const token=jwt.sign({id:user.id},"JWTOKEN");
-    return res.stauts(200).json({token,user});
+    return res.status(200).json({token,user});
 })
 export const userrouter=router;
