@@ -148,12 +148,14 @@ router.post("/challenge/join/public/:id", (req, res) => __awaiter(void 0, void 0
         return;
     }
     try {
+        yield recivetransaction(user.privatekey, decoded);
+    }
+    catch (e) {
+        console.log("failed");
+        return res.json({ message: "Transaction failed", e });
+    }
+    try {
         yield prisma.$transaction((prisma) => __awaiter(void 0, void 0, void 0, function* () {
-            const trx = yield recivetransaction(user.privatekey, decoded);
-            if (!trx) {
-                console.log("failed");
-                return res.json({ message: "Transaction failed" });
-            }
             let ch = false;
             for (let i = 0; i < (challenge === null || challenge === void 0 ? void 0 : challenge.members.length); i++) {
                 if (challenge.members[i] == user.id) {

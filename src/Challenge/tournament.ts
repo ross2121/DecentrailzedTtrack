@@ -137,12 +137,16 @@ router.post("/challenge/join/public/:id",async(req:any,res:any)=>{
         console.log("no user found");
         return;
     }
-    try{await prisma.$transaction(async(prisma)=>{
-        const trx=await recivetransaction(user.privatekey,decoded); 
-    if(!trx){
-        console.log("failed");
-        return res.json({message:"Transaction failed"});
+    try{await recivetransaction(user.privatekey,decoded); 
+
     }
+    catch(e){
+        console.log("failed");
+        return res.json({message:"Transaction failed",e});
+    }
+    try{
+        await prisma.$transaction(async(prisma)=>{
+        
     let ch:boolean=false;
      for(let i=0;i<challenge?.members.length;i++){
         if(challenge.members[i]==user.id){
@@ -401,7 +405,6 @@ async function sendtrasaction(privatekey:string,publicKey:string,Amount:number){
     return send;
 }
 async function revertback(privatekey:string,publicKey:string){
- 
     const decodedKey = bs58.decode(privatekey);
    console.log(decodedKey);
     const secretkey=Keypair.fromSecretKey(decodedKey);
