@@ -3,18 +3,22 @@ import e, { Router } from "express";
 import { challenge } from "../Auth/type";
 import { PrismaClient } from "@prisma/client";
 import dotenv from "dotenv";
+import bs58 from "bs58"
 import { Transaction,Connection, Keypair, sendAndConfirmTransaction, SystemProgram, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 const prisma=new PrismaClient();
 const connection=new Connection("https://api.devnet.solana.com")
 const router=Router();
 dotenv.config();
+const privatekey=process.env.PRIVATE_KEY;
+
 router.post("/create/challenge",async(req:any,res:any)=>{
     const {name,memberqty,Dailystep,Amount,Digital_Currency,days,userid}=req.body;
      const verify=challenge.safeParse({name,memberqty,Dailystep,Amount,Digital_Currency,days});
      if(!verify.success){
        return res.json({error:verify.error.errors})
      }
-     try{await prisma.challenge.create({
+     try{
+       const challenge= await prisma.challenge.create({
         data:{
             name,
             members:[],
@@ -24,33 +28,30 @@ router.post("/create/challenge",async(req:any,res:any)=>{
             Amount,
             Digital_Currency,
             days,
-            userid
+            userid,
+            PayoutStatus:"false",
         }
      })
-     return res.status(201).json("Challenge Created Successfully");}
+     return res.status(201).json({message:"Challenge Created Successfully",challenge},);}
      catch(error){
         console.log(error);
         return res.status(500).json({ message: "Error creating Challenge", error });
      }    
 })
-router.get("/challenge/:id",async(req:any,res:any)=>{
-    const id=req.query;
+router.get("/challenge/user/:id",async(req:any,res:any)=>{
+    const id=req.params.id;
    const challenge=await prisma.challenge.findUnique({
     where:{
         id:id
     } 
    })
-  
    if(!challenge){
-    return  res.status(400).json({message:"No challenge found for a particular id"},{status:400});
+    return  res.status(400).json({message:"No challenge found for a particular id"});
    }
    return res.status(200).json({challenge});
 })
 router.get("/challenge/public",async(req:any,res:any)=>{
     const allchalange=await prisma.challenge.findMany({
-        where:{
-            type:"public"
-        }
     })
     return res.status(200).json({allchalange});
 })
@@ -61,6 +62,16 @@ router.get("/challenge/private",async(req:any,res:any)=>{
         }
     })
     return res.status(200).json({allchalange});
+})
+router.post("/step",async(req:any,res:any)=>{
+    const steps=req.body;
+    if(!steps){
+       console.log("noooooooo");
+       return res.json("no  dadasd");
+    }
+    console.log(steps);
+    console.log("heieie");
+    return res.json({message:"nodosod"});
 })
 router.get("/challenge/:userid",async(req:any,res:any)=>{
     const userid=req.params.userid;
@@ -77,7 +88,7 @@ router.get("/challenge/:userid",async(req:any,res:any)=>{
     if(!user){
        return res.status(400).json({message:"No user found"});
     }
-    return res.status(200).json({user});
+    return res.status(200).json({message:user?.challenge});
     
 
 })
@@ -92,13 +103,26 @@ router.get("/participated/:userid",async(req:any,res:any)=>{
     }
    })
    if(!user){
-
+       return res.status(400).json({message:"No user found for paricular id"})
    } 
    return res.status(200).json({message:user})
 })
-router.post("/challenge/join/:id",async(req:any,res:any)=>{
+router.post("/challenge/join/public/:id",async(req:any,res:any)=>{
     const id=req.params.id;
     console.log("id",id);
+    const challenge=await prisma.challenge.findUnique({
+        where:{
+            id
+        }
+    })
+    if(!challenge){
+        console.log("no chalelenn");
+        return  res.json({message:"No Challenge found for that particular id"});
+       
+    }
+    if(challenge?.members.length>=challenge?.memberqty){
+        return res.status(440).json({message:"Challenge is full"});
+    }
     const tx=req.body.tx;
     const decoded=Transaction.from(tx.data);
     console.log("decoded",decoded); 
@@ -113,20 +137,11 @@ router.post("/challenge/join/:id",async(req:any,res:any)=>{
         console.log("no user found");
         return;
     }
-    const trx=await recivetransaction(user.privatekey,decoded); 
+    try{await prisma.$transaction(async(prisma)=>{
+        const trx=await recivetransaction(user.privatekey,decoded); 
     if(!trx){
         console.log("failed");
         return res.json({message:"Transaction failed"});
-    }
-    const challenge=await prisma.challenge.findUnique({
-        where:{
-            id
-        }
-    })
-    if(!challenge){
-        console.log("no chalelenn");
-        return  res.json({message:"No Challenge found for that particular id"});
-       
     }
     let ch:boolean=false;
      for(let i=0;i<challenge?.members.length;i++){
@@ -135,9 +150,9 @@ router.post("/challenge/join/:id",async(req:any,res:any)=>{
         }
      }
      if(ch){
+        console.log("check");
         return res.json({message:"User already exist"});
      }
-   
      const updatechallenge=await prisma.challenge.update({
         where:{
             id
@@ -148,8 +163,18 @@ router.post("/challenge/join/:id",async(req:any,res:any)=>{
             Totalamount:challenge.Totalamount + challenge.Amount
         }
      })
-    console.log("challenge",challenge);
+    console.log("challenge",updatechallenge);
    return res.json({message:"Added to the contest",updatechallenge});
+})}catch(error){
+    if(!privatekey){
+        console.log("nO private key foun");
+        return;
+    }
+    console.log(privatekey);
+     const transaction=await revertback(privatekey,decoded.signatures[0].publicKey.toBase58())
+     return transaction;
+}
+
 })
 
 router.get("total/steps",async(req:any,res:any)=>{
@@ -255,7 +280,8 @@ router.post("/challenge/private",async(req:any,res:any)=>{
         type:"private",
         members:[],
         name,
-        Request:members
+        Request:members,
+        PayoutStatus:"false"
     }
    })  
    return  res.json({message:"Challenge created succefull"});   
@@ -373,6 +399,20 @@ async function sendtrasaction(privatekey:string,publicKey:string,Amount:number){
     const send=await connection.sendTransaction(transaction,[keypair]);
     console.log(send);
     return send;
+}
+async function revertback(privatekey:string,publicKey:string){
+ 
+    const decodedKey = bs58.decode(privatekey);
+   console.log(decodedKey);
+    const secretkey=Keypair.fromSecretKey(decodedKey);
+    console.log("secrret",secretkey);
+     const transaction=new Transaction().add(SystemProgram.transfer({
+        fromPubkey:secretkey.publicKey,
+        toPubkey:new PublicKey(publicKey),
+        lamports:LAMPORTS_PER_SOL
+     }))
+     const sendtransaction=await sendAndConfirmTransaction(connection,transaction,[secretkey]);
+     return sendtransaction;
 }
 async function recivetransaction(privatekey:string,decoded:Transaction){
     const privateKeyArray = privatekey.split(',').map(num => parseInt(num, 10));

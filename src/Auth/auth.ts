@@ -21,22 +21,18 @@ router.post("/register",async(req,res:any)=>{
     }) 
     if(unique){
         return res.status(400).json({message:"User alredy register"});
+    } 
+    const uniqueusername=await prisma.user.findUnique({
+        where:{
+            username
+        }
+    })
+    if(uniqueusername){
+        return res.status(400).json({message:"Username alredy taken"});
     }
+
     const keypair= Keypair.generate();
-//     const nonce=crypto.randomBytes(16);
-//     const tex="password";
-//     let ciphertex;
-// crypto.pbkdf2(tex, 'salt', 100000, 16, 'sha256', (err:any, derivedKey:any) => {
-//     if (err) throw err;
-//     const cipher = crypto.createCipheriv("aes-128-gcm", derivedKey, nonce);
-//      ciphertex = Buffer.concat([cipher.update(keypair.secretKey.toString()), cipher.final()]);
-//     const authTag = cipher.getAuthTag();  
-//     console.log(ciphertex);
-//     console.log(authTag);
-// });
-// if(!ciphertex){
-//     return;
-// }
+    try{
     const salt=await bcrypt.genSalt(10);
     const hashpassword=await bcrypt.hash(password,salt);
     await prisma.$transaction(async(prisma)=>{
@@ -59,9 +55,11 @@ router.post("/register",async(req,res:any)=>{
         })
         const token=jwt.sign({id:user.id},"JWTTOKEN",{expiresIn:365});
         return res.status(200).json({token,user});
-    })
-    
-})
+    })  
+}catch(e){
+    return res.status(400).json({message:e});
+}}
+)
 router.post("/signin",async(req:any,res:any)=>{
     const {email,password}=req.body;
     if(!email||!password){
