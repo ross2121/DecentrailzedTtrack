@@ -44,7 +44,7 @@ model Challenge{
   user   User @relation(fields: [userid],references: [id])
   startdate   String
   enddate    String
-  status     Status @default(pending)
+  status     Completed @default(CurrentlyRunning)
   Request   String[]
   PayoutStatus Status @default(pending)
   Payoutpeople String[]
@@ -65,5 +65,9 @@ enum Status{
   pending
   accepted
   rejected
+}
+enum Completed{
+  CurrentlyRunning
+  Completed
 }
  

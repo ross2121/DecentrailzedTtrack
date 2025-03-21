@@ -71,6 +71,28 @@ router.get("/challenge/private/:userid",async(req:any,res:any)=>{
     })
     return res.status(200).json({allchalange});
 })
+router.get("/history/prevgame/:userid",async(req:any,res:any)=>{
+      const useid=req.params.userid;
+      const tournatment=await prisma.challenge.findMany({
+        where:{
+            status:"Completed",
+            userid:useid
+        }
+      })  
+      return res.status(200).json({Tournament:tournatment});
+})
+router.get("/history/prev/:userid",async(req:any,res:any)=>{
+    const useid=req.params.userid;
+    const tournatment=await prisma.challenge.findMany({
+      where:{
+          status:"Completed",
+          members:{
+            has:useid
+          }
+      }
+    })  
+    return res.status(200).json({Tournament:tournatment});
+})
 router.post("/step",async(req:any,res:any)=>{
     const steps=req.body;
     if(!steps){
