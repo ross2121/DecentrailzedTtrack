@@ -2,7 +2,7 @@ import { PrismaClient } from "@prisma/client";
 import { Router } from "express";
 import jwt from "jsonwebtoken";
 import  { Keypair } from "@solana/web3.js"
-import { UserSchema } from "./type";
+import { LoginSchema, UserSchema } from "./type";
 import bcrypt from "bcrypt"
 import assert from "assert";
 import crypto from "crypto"
@@ -12,7 +12,7 @@ router.post("/register",async(req,res:any)=>{
     const {username,name,email,password}=req.body;
     const verify=UserSchema.safeParse({username,name,email,password});
     if(!verify.success){
-        return res.status(400).json({message:"Provided detail are not valid"});
+        return res.status(400).json({message:verify.error.message,});
     }
     const unique=await prisma.user.findUnique({
         where:{
@@ -30,7 +30,6 @@ router.post("/register",async(req,res:any)=>{
     if(uniqueusername){
         return res.status(400).json({message:"Username alredy taken"});
     }
-
     const keypair= Keypair.generate();
     try{
     const salt=await bcrypt.genSalt(10);
@@ -62,8 +61,9 @@ router.post("/register",async(req,res:any)=>{
 )
 router.post("/signin",async(req:any,res:any)=>{
     const {email,password}=req.body;
-    if(!email||!password){
-        res.status(200).json({message:"Kindly provide the  required detail", status:400},)
+    const verify=LoginSchema.safeParse({email,password});
+    if(!verify.success){
+        return res.status(400).json({message:verify.error.message,});
     }
     const user=await prisma.user.findUnique({
         where:{
