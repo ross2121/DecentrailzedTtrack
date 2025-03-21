@@ -8,6 +8,8 @@ const auth_1 = require("./Auth/auth");
 const cors_1 = __importDefault(require("cors"));
 const tournament_1 = require("./Challenge/tournament");
 const friend_1 = require("./Auth/friend");
+const client_1 = require("@prisma/client");
+const prisma = new client_1.PrismaClient();
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
 app.use((0, cors_1.default)());

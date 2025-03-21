@@ -25,7 +25,7 @@ const router = (0, express_1.Router)();
 dotenv_1.default.config();
 const privatekey = process.env.PRIVATE_KEY;
 router.post("/create/challenge", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { name, memberqty, Dailystep, Amount, Digital_Currency, days, userid } = req.body;
+    const { name, memberqty, Dailystep, Amount, Digital_Currency, days, userid, startdate, enddate } = req.body;
     const verify = type_1.challenge.safeParse({ name, memberqty, Dailystep, Amount, Digital_Currency, days });
     if (!verify.success) {
         return res.json({ error: verify.error.errors });
@@ -42,7 +42,9 @@ router.post("/create/challenge", (req, res) => __awaiter(void 0, void 0, void 0,
                 Digital_Currency,
                 days,
                 userid,
-                PayoutStatus: "false",
+                PayoutStatus: "pending",
+                startdate,
+                enddate
             }
         });
         return res.status(201).json({ message: "Challenge Created Successfully", challenge });
@@ -68,9 +70,14 @@ router.get("/challenge/public", (req, res) => __awaiter(void 0, void 0, void 0, 
     const allchalange = yield prisma.challenge.findMany({});
     return res.status(200).json({ allchalange });
 }));
-router.get("/challenge/private", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.get("/challenge/private/:userid", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const userid = req.params.userid;
+    console.log(userid);
     const allchalange = yield prisma.challenge.findMany({
         where: {
+            Request: {
+                has: userid
+            },
             type: "private"
         }
     });
@@ -117,6 +124,28 @@ router.get("/participated/:userid", (req, res) => __awaiter(void 0, void 0, void
         return res.status(400).json({ message: "No user found for paricular id" });
     }
     return res.status(200).json({ message: user });
+}));
+router.post("/send/wallet", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { tx } = req.body;
+    const transaction = web3_js_1.Transaction.from(tx);
+    const user = yield prisma.user.findFirst({
+        where: {
+            publickey: transaction.signatures[0].publicKey.toBase58()
+        }
+    });
+    console.log("publickey", user === null || user === void 0 ? void 0 : user.publickey);
+    if (!user) {
+        res.json({ message: "No user found" });
+        console.log("no user found");
+        return;
+    }
+    try {
+        yield recivetransaction(user.privatekey, transaction);
+    }
+    catch (e) {
+        console.log("failed");
+        return res.json({ message: "Transaction failed", e });
+    }
 }));
 router.post("/challenge/join/public/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const id = req.params.id;
@@ -241,36 +270,52 @@ router.post("/challenge/finish", (req, res) => __awaiter(void 0, void 0, void 0,
         return;
     }
     const equalamount = (challengee === null || challengee === void 0 ? void 0 : challengee.members.length) / (challengee === null || challengee === void 0 ? void 0 : challengee.Totalamount);
-    yield prisma.$transaction((prisma) => __awaiter(void 0, void 0, void 0, function* () {
-        for (let i = 0; i < (challengee === null || challengee === void 0 ? void 0 : challengee.members.length); i++) {
-            const user = yield prisma.user.findUnique({
-                where: {
-                    id: challengee === null || challengee === void 0 ? void 0 : challengee.members[i]
-                }
-            });
-            if (!user) {
-                res.json({ message: "No user found" });
-                return;
+    while (challengee.Payoutpeople.length !== 0) {
+        const user = yield prisma.user.findUnique({
+            where: {
+                id: challengee.Payoutpeople[0]
             }
-            if (!(challengee === null || challengee === void 0 ? void 0 : challengee.Totalamount)) {
-                return;
-            }
-            const send = yield sendtrasaction(privatekey, user.publickey, equalamount);
+        });
+        if (!user) {
+            return res.status(400).json({ message: "No user found" });
+        }
+        if (!challengee) {
+            return res.status(400).json({ message: "No challenge found" });
+        }
+        try {
+            yield sendtrasaction(privatekey, user.publickey, equalamount);
             yield prisma.challenge.update({
                 where: {
                     id
                 },
                 data: {
-                    Totalamount: challengee.Totalamount - equalamount
+                    Totalamount: challengee.Totalamount - equalamount,
+                    Payoutpeople: {
+                        set: challengee.Payoutpeople.slice(1)
+                    },
                 }
             });
-            // console.log(send); 
         }
-    }));
+        catch (e) {
+            yield prisma.challenge.update({
+                where: {
+                    id
+                },
+                data: {
+                    Remaingpeople: {
+                        push: user.id
+                    },
+                    Payoutpeople: {
+                        set: challengee.Payoutpeople.slice(1)
+                    }
+                }
+            });
+        }
+    }
     return res.status(200).json({ message: "contest Ended Succefully" });
 }));
 router.post("/challenge/private", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { userid, Amount, Digital_Currency, days, Dailystep, memberqty, name, members } = req.body;
+    const { userid, Amount, Digital_Currency, days, Dailystep, memberqty, name, request, startdate, enddate } = req.body;
     const user = yield prisma.user.findUnique({
         where: {
             id: userid
@@ -291,8 +336,10 @@ router.post("/challenge/private", (req, res) => __awaiter(void 0, void 0, void 0
             type: "private",
             members: [],
             name,
-            Request: members,
-            PayoutStatus: "false"
+            Request: request,
+            PayoutStatus: "pending",
+            startdate,
+            enddate
         }
     });
     return res.json({ message: "Challenge created succefull" });
