@@ -25,7 +25,7 @@ router.post("/register", (req, res) => __awaiter(void 0, void 0, void 0, functio
     const { username, name, email, password } = req.body;
     const verify = type_1.UserSchema.safeParse({ username, name, email, password });
     if (!verify.success) {
-        return res.status(400).json({ message: "Provided detail are not valid" });
+        return res.status(400).json({ message: verify.error.message, });
     }
     const unique = yield prisma.user.findUnique({
         where: {
@@ -75,8 +75,9 @@ router.post("/register", (req, res) => __awaiter(void 0, void 0, void 0, functio
 }));
 router.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { email, password } = req.body;
-    if (!email || !password) {
-        res.status(200).json({ message: "Kindly provide the  required detail", status: 400 });
+    const verify = type_1.LoginSchema.safeParse({ email, password });
+    if (!verify.success) {
+        return res.status(400).json({ message: verify.error.message, });
     }
     const user = yield prisma.user.findUnique({
         where: {

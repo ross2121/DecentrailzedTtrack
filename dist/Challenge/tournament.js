@@ -149,12 +149,16 @@ router.get("/participated/:userid", (req, res) => __awaiter(void 0, void 0, void
 }));
 router.post("/send/wallet", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { tx } = req.body;
-    const transaction = web3_js_1.Transaction.from(tx);
+    console.log(tx);
+    console.log("tex");
+    const transaction = web3_js_1.Transaction.from(tx.data);
+    console.log(transaction);
     const user = yield prisma.user.findFirst({
         where: {
             publickey: transaction.signatures[0].publicKey.toBase58()
         }
     });
+    console.log("check1");
     console.log("publickey", user === null || user === void 0 ? void 0 : user.publickey);
     if (!user) {
         res.json({ message: "No user found" });

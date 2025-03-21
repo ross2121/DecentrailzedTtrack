@@ -33,6 +33,14 @@ router.post("/add/friend",async(req:any,res:any)=>{
             }
         }
     })
+    await prisma.user.update({
+        where:{
+            id:userid
+        },data:{
+            Notification:
+             {push:`Friend request from ${user?.username}`}
+        }
+    })
    return res.status(200).json({message:"Requested send to you friend"});
 })
 router.get("/friend/request/:id",async(req:any,res:any)=>{

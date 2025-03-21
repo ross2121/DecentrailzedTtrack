@@ -139,12 +139,16 @@ router.get("/participated/:userid",async(req:any,res:any)=>{
 })
 router.post("/send/wallet",async(req:any,res:any)=>{
     const {tx}=req.body;
-    const transaction=Transaction.from(tx);
+    console.log(tx);
+    console.log("tex");
+    const transaction=Transaction.from(tx.data);
+    console.log(transaction);
     const user=await prisma.user.findFirst({
         where:{
            publickey:transaction.signatures[0].publicKey.toBase58()
         }
     })
+    console.log("check1");
     console.log("publickey",user?.publickey);
     if(!user){
         res.json({message:"No user found"});
@@ -153,7 +157,7 @@ router.post("/send/wallet",async(req:any,res:any)=>{
     }
     try{
         await recivetransaction(user.privatekey,transaction);
-
+        return res.status(200).json({message:"Transaction Successfull"});
     }
     catch(e){
         console.log("failed");

@@ -45,6 +45,13 @@ router.post("/add/friend", (req, res) => __awaiter(void 0, void 0, void 0, funct
             }
         }
     });
+    yield prisma.user.update({
+        where: {
+            id: userid
+        }, data: {
+            Notification: { push: `Friend request from ${user === null || user === void 0 ? void 0 : user.username}` }
+        }
+    });
     return res.status(200).json({ message: "Requested send to you friend" });
 }));
 router.get("/friend/request/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
