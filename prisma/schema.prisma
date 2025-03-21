@@ -42,8 +42,13 @@ model Challenge{
   days   Int
   type    Challengetype @default(public) 
   user   User @relation(fields: [userid],references: [id])
+  startdate   String
+  enddate    String
+  status     Status @default(pending)
   Request   String[]
-  PayoutStatus String
+  PayoutStatus Status @default(pending)
+  Payoutpeople String[]
+  Remaingpeople String[]
 }
 model Steps{
   id  String @id  @default(uuid())
@@ -55,5 +60,10 @@ model Steps{
 enum Challengetype{
   public
   private
+}
+enum Status{
+  pending
+  accepted
+  rejected
 }
  

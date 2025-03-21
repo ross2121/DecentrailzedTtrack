@@ -12,7 +12,7 @@ dotenv.config();
 const privatekey=process.env.PRIVATE_KEY;
 
 router.post("/create/challenge",async(req:any,res:any)=>{
-    const {name,memberqty,Dailystep,Amount,Digital_Currency,days,userid}=req.body;
+    const {name,memberqty,Dailystep,Amount,Digital_Currency,days,userid,startdate,enddate}=req.body;
      const verify=challenge.safeParse({name,memberqty,Dailystep,Amount,Digital_Currency,days});
      if(!verify.success){
        return res.json({error:verify.error.errors})
@@ -29,7 +29,9 @@ router.post("/create/challenge",async(req:any,res:any)=>{
             Digital_Currency,
             days,
             userid,
-            PayoutStatus:"false",
+            PayoutStatus:"pending",
+            startdate,
+            enddate
         }
      })
      return res.status(201).json({message:"Challenge Created Successfully",challenge},);}
@@ -180,7 +182,6 @@ router.post("/challenge/join/public/:id",async(req:any,res:any)=>{
 }
 
 })
-
 router.get("total/steps",async(req:any,res:any)=>{
     const user=await prisma.user.findMany({
           include:{
@@ -234,6 +235,17 @@ router.post("/challenge/finish",async(req:any,res:any)=>{
         return;
     }
     const equalamount=challengee?.members.length/challengee?.Totalamount;
+     for(let i=0;i<challengee.payoutremainign.length;i++){
+        const user=await prisma.user.findUnique({
+            where:{
+                id:challengee.payoutremainign[i]
+            }
+        })
+        if(!user){
+           return res.status(400).json({message:"No user found"});
+            
+        }
+     }
     await prisma.$transaction(async(prisma)=>{
         for(let i=0;i<challengee?.members.length;i++){
             const user=await prisma.user.findUnique({
@@ -242,13 +254,16 @@ router.post("/challenge/finish",async(req:any,res:any)=>{
                }
             }) 
             if(!user){
-               res.json({message:"No user found"});
-               return;
+            
             }
             if(!challengee?.Totalamount){
                return;
             }
-           const send= await sendtrasaction(privatekey,user.publickey,equalamount); 
+        try{ 
+            await sendtrasaction(privatekey,user.publickey,equalamount); 
+        }catch(e){
+             
+        }
            await prisma.challenge.update({
             where:{
                 id
@@ -263,7 +278,8 @@ router.post("/challenge/finish",async(req:any,res:any)=>{
    return res.status(200).json({message:"contest Ended Succefully"});
 })
 router.post("/challenge/private",async(req:any,res:any)=>{   
-    const {userid,Amount,Digital_Currency,days,Dailystep,memberqty,name,members}=req.body;
+    const {userid,Amount,Digital_Currency,days,Dailystep,memberqty,name,members,startdate,
+        enddate}=req.body;
     const user=await prisma.user.findUnique({
         where:{
             id:userid
@@ -285,7 +301,9 @@ router.post("/challenge/private",async(req:any,res:any)=>{
         members:[],
         name,
         Request:members,
-        PayoutStatus:"false"
+        PayoutStatus:"pending",
+        startdate,
+            enddate
     }
    })  
    return  res.json({message:"Challenge created succefull"});   
