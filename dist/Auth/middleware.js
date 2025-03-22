@@ -8,12 +8,30 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.middleware = void 0;
-const middleware = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const header = req.header.Authorization;
-    if (!header) {
-        res.json;
+exports.auth = void 0;
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const string = process.env.JWT_SECRET || "abc";
+const auth = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        if (!req.headers.authorization) {
+            throw new Error("Authantication error");
+        }
+        const token = req.headers.authorization;
+        if (!token) {
+            throw new Error("Authoriazation error");
+        }
+        const decode = jsonwebtoken_1.default.verify(token, string);
+        // @ts-ignore
+        req.id = decode.id;
+        next();
+    }
+    catch (error) {
+        console.log(error);
+        res.status(402).json({ error });
     }
 });
-exports.middleware = middleware;
+exports.auth = auth;

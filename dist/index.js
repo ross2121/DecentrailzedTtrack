@@ -32,18 +32,76 @@ app.get("/test", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 }));
 app.use("/api/v1", tournament_1.challenges);
 app.use("/api/v1", friend_1.Friend);
-node_cron_1.default.schedule('1,2,4,5 * * * *', () => {
-    console.log('running every minute 1, 2, 4 and 5');
-});
+function Gettime() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const enddatespublic = yield prisma.challenge.findMany({});
+        const arrayof = enddatespublic.map(en => en.enddate);
+        for (const enddate of arrayof) {
+            const date = new Date(enddate);
+            date.setDate(date.getDate() + 1);
+            const day = date.getDate();
+            const month = date.getMonth() + 1;
+            const year = date.getFullYear();
+            const cronSchedule = `0 0 ${day} ${month} *`;
+            node_cron_1.default.schedule(cronSchedule, () => __awaiter(this, void 0, void 0, function* () {
+                console.log(`Running cron job for end date: ${enddate}`);
+                enddatespublic.map((member) => __awaiter(this, void 0, void 0, function* () {
+                    const publicmember = member.members;
+                    publicmember.map((user) => __awaiter(this, void 0, void 0, function* () {
+                        const userd = yield prisma.user.findUnique({
+                            where: {
+                                id: user
+                            }, include: {
+                                step: true
+                            }
+                        });
+                        const startdate = new Date(member.startdate);
+                        const enddate = new Date(member.enddate);
+                        let usercheck = true;
+                        for (let currentDate = startdate; currentDate <= enddate; currentDate.setDate(currentDate.getDate() + 1)) {
+                            if (userd == null) {
+                                return;
+                            }
+                            const stepForCurrentDay = userd.step.find(step => {
+                                const stepDate = new Date(step.day);
+                                return (stepDate.getFullYear() === currentDate.getFullYear() &&
+                                    stepDate.getMonth() === currentDate.getMonth() &&
+                                    stepDate.getDate() === currentDate.getDate());
+                            });
+                            if (stepForCurrentDay) {
+                                if (parseInt(stepForCurrentDay.steps) > member.Dailystep) {
+                                    usercheck = false;
+                                    break;
+                                }
+                            }
+                        }
+                        if (usercheck) {
+                            yield prisma.challenge.update({
+                                where: {
+                                    id: member.id
+                                }, data: {
+                                    Payoutpeople: {
+                                        push: userd === null || userd === void 0 ? void 0 : userd.id
+                                    }
+                                }
+                            });
+                        }
+                        usercheck = true;
+                    }));
+                    try {
+                        yield axios_1.default.post("https://decentrailzed-ttrack.vercel.app/challenge/finish", { id: member.id });
+                    }
+                    catch (e) {
+                        console.log(e);
+                    }
+                }));
+            }));
+            console.log("check");
+        }
+    });
+}
+Gettime();
 const port = 3000;
 app.listen(port, () => {
     console.log(`Server is listening at ${port}`);
 });
-function Gettime() {
-    return __awaiter(this, void 0, void 0, function* () {
-        const enddate = yield prisma.challenge.findMany({});
-        const arrayof = enddate.map((en) => en.enddate);
-        for (const arry of arrayof) {
-        }
-    });
-}
