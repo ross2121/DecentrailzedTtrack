@@ -302,13 +302,12 @@ router.post("/regular/update", (req, res) => __awaiter(void 0, void 0, void 0, f
         },
     });
     if (existing) {
-        const step = parseInt(existing.steps) + parseInt(steps);
         yield prisma.steps.update({
             where: {
                 id: existing.id
             },
             data: {
-                steps: step.toString(),
+                steps: steps,
             }
         });
     }

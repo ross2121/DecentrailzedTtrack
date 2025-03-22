@@ -296,13 +296,12 @@ router.post("/regular/update",async(req:any,res:any)=>{
         
     })
     if(existing){
-        const step=parseInt(existing.steps)+parseInt(steps)
      await prisma.steps.update({
         where:{
             id:existing.id
         },
         data:{
-            steps:step.toString(),
+            steps:steps,
             
         }
      })
