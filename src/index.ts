@@ -21,8 +21,7 @@ app.get("/test",async(req:any,res:any)=>{
 app.use("/api/v1",challenges);
 app.use("/api/v1",Friend);
 async function Gettime() {
-    const enddatespublic = await prisma.challenge.findMany({
-    
+    const enddatespublic = await prisma.challenge.findMany({ 
     });    
     const arrayof = enddatespublic.map(en => en.enddate);
     for (const enddate of arrayof) {
@@ -80,7 +79,7 @@ async function Gettime() {
                    usercheck=true;
                  }) 
                  try{ 
-                    await axios.post("https://decentrailzed-ttrack.vercel.app/challenge/finish",{id:member.id})   } 
+                    await axios.post("https://decentrailzed-ttrack-3yr8.vercel.app/challenge/finish",{id:member.id})   } 
                     catch(e){
                       console.log(e);
                     }
@@ -95,3 +94,4 @@ const port=3000;
 app.listen(port,()=>{
     console.log(`Server is listening at ${port}`);
 })
+

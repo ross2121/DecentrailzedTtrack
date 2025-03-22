@@ -89,7 +89,7 @@ function Gettime() {
                         usercheck = true;
                     }));
                     try {
-                        yield axios_1.default.post("https://decentrailzed-ttrack.vercel.app/challenge/finish", { id: member.id });
+                        yield axios_1.default.post("https://decentrailzed-ttrack-3yr8.vercel.app/challenge/finish", { id: member.id });
                     }
                     catch (e) {
                         console.log(e);
