@@ -210,6 +210,17 @@ router.post("/challenge/join/public/:id", (req, res) => __awaiter(void 0, void 0
         console.log("no user found");
         return;
     }
+    const userprev = yield prisma.challenge.findUnique({
+        where: {
+            id: challenge.id,
+            members: {
+                has: user.id
+            }
+        }
+    });
+    if (userprev) {
+        return res.status(500).json({ message: "USer alredy added in the contest" });
+    }
     try {
         yield recivetransaction(user.privatekey, decoded);
     }

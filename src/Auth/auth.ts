@@ -81,4 +81,8 @@ router.post("/signin",async(req:any,res:any)=>{
     const token=jwt.sign({id:user.id},"JWTOKEN");
     return res.status(200).json({token,user});
 })
+router.get("/test/:userid",async(req,res)=>{
+    const userid=req.params.userid;
+    res.json({message:userid});
+})
 export const userrouter=router;

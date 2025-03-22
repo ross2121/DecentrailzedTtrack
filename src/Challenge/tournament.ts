@@ -203,6 +203,17 @@ router.post("/challenge/join/public/:id",async(req:any,res:any)=>{
         console.log("no user found");
         return;
     }
+    const userprev=await prisma.challenge.findUnique({
+        where:{
+            id:challenge.id,
+            members:{
+                has:user.id
+            }
+        }
+    })
+    if(userprev){
+        return res.status(500).json({message:"USer alredy added in the contest"});
+    }
     try{
         await recivetransaction(user.privatekey,decoded); 
 

@@ -95,4 +95,8 @@ router.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function*
     const token = jsonwebtoken_1.default.sign({ id: user.id }, "JWTOKEN");
     return res.status(200).json({ token, user });
 }));
+router.get("/test/:userid", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const userid = req.params.userid;
+    res.json({ message: userid });
+}));
 exports.userrouter = router;
