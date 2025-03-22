@@ -47,6 +47,15 @@ router.post("/create/challenge", (req, res) => __awaiter(void 0, void 0, void 0,
                 enddate
             }
         });
+        yield prisma.user.update({
+            where: {
+                id: userid
+            }, data: {
+                HistoryCreated: {
+                    push: challenge.id
+                }
+            }
+        });
         return res.status(201).json({ message: "Challenge Created Successfully", challenge });
     }
     catch (error) {
@@ -87,7 +96,6 @@ router.get("/history/prevgame/:userid", (req, res) => __awaiter(void 0, void 0, 
     const useid = req.params.userid;
     const tournatment = yield prisma.challenge.findMany({
         where: {
-            status: "Completed",
             userid: useid
         }
     });
@@ -97,7 +105,6 @@ router.get("/history/prev/:userid", (req, res) => __awaiter(void 0, void 0, void
     const useid = req.params.userid;
     const tournatment = yield prisma.challenge.findMany({
         where: {
-            status: "Completed",
             members: {
                 has: useid
             }
@@ -418,59 +425,57 @@ router.post("/challenge/acceptchallenge", (req, res) => __awaiter(void 0, void 0
     }));
     return res.status(200).json({ message: "User added succe" });
 }));
-router.post("/challenge/private/finish", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { id } = req.body;
-    const privatekey = process.env.PRIVATE_KEY;
-    if (!privatekey) {
-        res.json({ message: "No private key found" });
-        return;
-    }
-    try {
-        const challengee = yield prisma.challenge.findUnique({
-            where: {
-                id
-            }
-        });
-        if (!challengee) {
-            res.json({ message: "No challenge found" });
-            return;
-        }
-        const equalamount = (challengee === null || challengee === void 0 ? void 0 : challengee.members.length) / (challengee === null || challengee === void 0 ? void 0 : challengee.Totalamount);
-        yield prisma.$transaction((prisma) => __awaiter(void 0, void 0, void 0, function* () {
-            for (let i = 0; i < (challengee === null || challengee === void 0 ? void 0 : challengee.members.length); i++) {
-                const user = yield prisma.user.findUnique({
-                    where: {
-                        id: challengee === null || challengee === void 0 ? void 0 : challengee.members[i]
-                    }
-                });
-                if (!user) {
-                    res.json({ message: "No user found" });
-                    return;
-                }
-                if (!(challengee === null || challengee === void 0 ? void 0 : challengee.Totalamount)) {
-                    return;
-                }
-                const send = yield sendtrasaction(privatekey, user.publickey, equalamount);
-                if (send) {
-                    challengee.Totalamount -= challengee === null || challengee === void 0 ? void 0 : challengee.Amount;
-                }
-                yield prisma.challenge.update({
-                    where: {
-                        id
-                    }, data: {
-                        Totalamount: challengee.Totalamount - equalamount
-                    }
-                });
-                console.log(send);
-            }
-        }));
-        return res.json({ message: "contest Ended Succefully" });
-    }
-    catch (e) {
-        console.error("Error during payout:", e);
-        return res.status(500).json({ message: "Failed to complete payout", error: e.message });
-    }
-}));
+// router.post("/challenge/private/finish",async(req:any,res:any)=>{
+//     const {id}=req.body;
+//     const privatekey=process.env.PRIVATE_KEY;
+//     if(!privatekey){
+//         res.json({message:"No private key found"});
+//         return;
+//     }
+//     try{const challengee=await prisma.challenge.findUnique({
+//         where:{
+//             id
+//         }
+//     })
+//     if(!challengee){
+//         res.json({message:"No challenge found"});
+//         return;
+//     }
+//     const equalamount=challengee?.members.length/challengee?.Totalamount;
+//     await prisma.$transaction(async(prisma)=>{
+//         for(let i=0;i<challengee?.members.length;i++){
+//             const user=await prisma.user.findUnique({
+//                where:{
+//                    id:challengee?.members[i]
+//                }
+//             }) 
+//             if(!user){
+//                res.json({message:"No user found"});
+//                return;
+//             }
+//             if(!challengee?.Totalamount){
+//                return;
+//             }
+//            const send= await sendtrasaction(privatekey,user.publickey,equalamount); 
+//             if(send){
+//                challengee.Totalamount-=challengee?.Amount;  
+//             }
+//             await prisma.challenge.update({
+//                 where:{
+//                     id
+//                 },data:{
+//                     Totalamount: challengee.Totalamount - equalamount
+//                 }
+//             })
+//             console.log(send);  
+//         }
+//     })
+//     return res.json({message:"contest Ended Succefully"});
+// }catch(e:any){
+//     console.error("Error during payout:", e);
+//     return res.status(500).json({ message: "Failed to complete payout", error: e.message });       
+//     }
+// })
 function sendtrasaction(privatekey, publicKey, Amount) {
     return __awaiter(this, void 0, void 0, function* () {
         const encoder = new TextEncoder();
