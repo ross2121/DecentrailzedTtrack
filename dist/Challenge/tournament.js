@@ -28,7 +28,7 @@ router.post("/create/challenge", (req, res) => __awaiter(void 0, void 0, void 0,
     const { name, memberqty, Dailystep, Amount, Digital_Currency, days, userid, startdate, enddate } = req.body;
     const verify = type_1.challenge.safeParse({ name, memberqty, Dailystep, Amount, Digital_Currency, days });
     if (!verify.success) {
-        return res.json({ error: verify.error.errors });
+        return res.status(400).json({ error: verify.error.errors });
     }
     try {
         const challenge = yield prisma.challenge.create({
@@ -167,6 +167,7 @@ router.post("/send/wallet", (req, res) => __awaiter(void 0, void 0, void 0, func
     }
     try {
         yield recivetransaction(user.privatekey, transaction);
+        return res.status(200).json({ message: "Transaction Successfull" });
     }
     catch (e) {
         console.log("failed");

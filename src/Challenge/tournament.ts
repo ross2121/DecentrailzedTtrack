@@ -15,7 +15,7 @@ router.post("/create/challenge",async(req:any,res:any)=>{
     const {name,memberqty,Dailystep,Amount,Digital_Currency,days,userid,startdate,enddate}=req.body;
      const verify=challenge.safeParse({name,memberqty,Dailystep,Amount,Digital_Currency,days});
      if(!verify.success){
-       return res.json({error:verify.error.errors})
+       return res.status(400).json({error:verify.error.errors})
      }
      try{
        const challenge= await prisma.challenge.create({
