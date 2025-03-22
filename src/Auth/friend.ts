@@ -70,6 +70,11 @@ router.get("/get/friends/:userid",async(req:any,res:any)=>{
     })
     return res.json({user:user?.Friends});
 })
+
+
+
+
+
 router.post("/accept/friend",async(req:any,res:any)=>{
     const  {userid,username,bool}=req.body;
     if(!userid||!username){
