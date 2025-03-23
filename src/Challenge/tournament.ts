@@ -268,7 +268,6 @@ router.get("/total/steps",async(req:any,res:any)=>{
         username: user.username,
         userId: user.id,
         steps: user.step[0]?.steps || 0,
-        date: today
     }));
     return res.status(200).json({data:formattedSteps});
 })
