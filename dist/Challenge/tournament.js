@@ -256,6 +256,7 @@ router.post("/challenge/join/public/:id", (req, res) => __awaiter(void 0, void 0
 }));
 router.get("/total/steps", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const today = new Date().toISOString().split('T')[0];
+    console.log("dasdasddsda");
     const user = yield prisma.user.findMany({
         include: {
             step: {
@@ -326,62 +327,52 @@ router.post("/challenge/finish", (req, res) => __awaiter(void 0, void 0, void 0,
     const { id } = req.body;
     const privatekey = process.env.PRIVATE_KEY;
     if (!privatekey) {
-        res.json({ message: "No private key found" }, { status: 400 });
-        return;
+        return res.status(400).json({ message: "No private key found" });
     }
     const challengee = yield prisma.challenge.findUnique({
-        where: {
-            id
-        }
+        where: { id },
     });
     if (!challengee) {
-        res.json({ message: "No challenge found" });
-        return;
+        return res.status(400).json({ message: "No challenge found" });
     }
-    const equalamount = (challengee === null || challengee === void 0 ? void 0 : challengee.members.length) / (challengee === null || challengee === void 0 ? void 0 : challengee.Totalamount);
+    const equalamount = challengee.Totalamount / challengee.members.length;
     while (challengee.Payoutpeople.length !== 0) {
         const user = yield prisma.user.findUnique({
-            where: {
-                id: challengee.Payoutpeople[0]
-            }
+            where: { id: challengee.Payoutpeople[0] },
         });
         if (!user) {
             return res.status(400).json({ message: "No user found" });
         }
-        if (!challengee) {
-            return res.status(400).json({ message: "No challenge found" });
-        }
         try {
+            console.log("Sending transaction...");
             yield sendtrasaction(privatekey, user.publickey, equalamount);
+            console.log("Transaction successful");
             yield prisma.challenge.update({
-                where: {
-                    id
-                },
+                where: { id },
                 data: {
                     Totalamount: challengee.Totalamount - equalamount,
                     Payoutpeople: {
-                        set: challengee.Payoutpeople.slice(1)
+                        set: challengee.Payoutpeople.slice(1),
                     },
-                }
+                },
             });
         }
         catch (e) {
+            console.error("Transaction failed:", e);
             yield prisma.challenge.update({
-                where: {
-                    id
-                },
+                where: { id },
                 data: {
                     Remaingpeople: {
-                        push: user.id
+                        push: user.id,
                     },
                     Payoutpeople: {
-                        set: challengee.Payoutpeople.slice(1)
-                    }
-                }
+                        set: challengee.Payoutpeople.slice(1),
+                    },
+                },
             });
         }
     }
-    return res.status(200).json({ message: "contest Ended Succefully" });
+    return res.status(200).json({ message: "contest Ended Successfully" });
 }));
 router.post("/challenge/private", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { userid, Amount, Digital_Currency, days, Dailystep, memberqty, name, request, startdate, enddate } = req.body;
@@ -460,62 +451,11 @@ router.post("/challenge/acceptchallenge", (req, res) => __awaiter(void 0, void 0
     }));
     return res.status(200).json({ message: "User added succe" });
 }));
-// router.post("/challenge/private/finish",async(req:any,res:any)=>{
-//     const {id}=req.body;
-//     const privatekey=process.env.PRIVATE_KEY;
-//     if(!privatekey){
-//         res.json({message:"No private key found"});
-//         return;
-//     }
-//     try{const challengee=await prisma.challenge.findUnique({
-//         where:{
-//             id
-//         }
-//     })
-//     if(!challengee){
-//         res.json({message:"No challenge found"});
-//         return;
-//     }
-//     const equalamount=challengee?.members.length/challengee?.Totalamount;
-//     await prisma.$transaction(async(prisma)=>{
-//         for(let i=0;i<challengee?.members.length;i++){
-//             const user=await prisma.user.findUnique({
-//                where:{
-//                    id:challengee?.members[i]
-//                }
-//             }) 
-//             if(!user){
-//                res.json({message:"No user found"});
-//                return;
-//             }
-//             if(!challengee?.Totalamount){
-//                return;
-//             }
-//            const send= await sendtrasaction(privatekey,user.publickey,equalamount); 
-//             if(send){
-//                challengee.Totalamount-=challengee?.Amount;  
-//             }
-//             await prisma.challenge.update({
-//                 where:{
-//                     id
-//                 },data:{
-//                     Totalamount: challengee.Totalamount - equalamount
-//                 }
-//             })
-//             console.log(send);  
-//         }
-//     })
-//     return res.json({message:"contest Ended Succefully"});
-// }catch(e:any){
-//     console.error("Error during payout:", e);
-//     return res.status(500).json({ message: "Failed to complete payout", error: e.message });       
-//     }
-// })
 function sendtrasaction(privatekey, publicKey, Amount) {
     return __awaiter(this, void 0, void 0, function* () {
-        const encoder = new TextEncoder();
-        const encoded = encoder.encode(privatekey);
-        const keypair = web3_js_1.Keypair.fromSecretKey(encoded);
+        const decodedKey = bs58_1.default.decode(privatekey);
+        const keypair = web3_js_1.Keypair.fromSecretKey(decodedKey);
+        console.log("chekad");
         const transaction = new web3_js_1.Transaction().add(web3_js_1.SystemProgram.transfer({
             fromPubkey: keypair.publicKey,
             toPubkey: new web3_js_1.PublicKey(publicKey),

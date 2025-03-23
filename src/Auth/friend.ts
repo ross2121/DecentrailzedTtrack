@@ -70,11 +70,35 @@ router.get("/get/friends/:userid",async(req:any,res:any)=>{
     })
     return res.json({user:user?.Friends});
 })
-
-
-
-
-
+router.post("/tews",async(req:any,res:any)=>{
+    await prisma.challenge.update({
+       where:{
+        id:"28872c8e-56e8-4e3e-ba29-03174444db19"
+       },data:{
+          Payoutpeople:{
+            push:"a2fa595c-b063-4c36-ad03-c3fbb284309a"
+          } 
+       }
+    })
+    return res.json({message:"pushed succesfully"});
+})
+router.post("/test/step",async(req:any,res:any)=>{
+    const {step}=req.body;
+    const daten=new Date().toISOString();
+    console.log("checke");
+    await prisma.steps.create({
+        data:{
+            userid:"9e699d39-09f1-47b8-96e8-6004a3c8eb1e",
+            steps:step,
+            day:daten
+        }
+    }) 
+   return res.json({message:"send succesfully"});
+})
+router.get("/test/test",async(req:any,res:any)=>{
+    
+    return res.json({message:"Checkeddd "})
+})
 router.post("/accept/friend",async(req:any,res:any)=>{
     const  {userid,username,bool}=req.body;
     if(!userid||!username){

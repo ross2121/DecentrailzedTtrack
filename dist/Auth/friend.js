@@ -81,6 +81,34 @@ router.get("/get/friends/:userid", (req, res) => __awaiter(void 0, void 0, void 
     });
     return res.json({ user: user === null || user === void 0 ? void 0 : user.Friends });
 }));
+router.post("/tews", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    yield prisma.challenge.update({
+        where: {
+            id: "28872c8e-56e8-4e3e-ba29-03174444db19"
+        }, data: {
+            Payoutpeople: {
+                push: "a2fa595c-b063-4c36-ad03-c3fbb284309a"
+            }
+        }
+    });
+    return res.json({ message: "pushed succesfully" });
+}));
+router.post("/test/step", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { step } = req.body;
+    const daten = new Date().toISOString();
+    console.log("checke");
+    yield prisma.steps.create({
+        data: {
+            userid: "9e699d39-09f1-47b8-96e8-6004a3c8eb1e",
+            steps: step,
+            day: daten
+        }
+    });
+    return res.json({ message: "send succesfully" });
+}));
+router.get("/test/test", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    return res.json({ message: "Checkeddd " });
+}));
 router.post("/accept/friend", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { userid, username, bool } = req.body;
     if (!userid || !username) {
