@@ -9,7 +9,7 @@
     ],
     "crons": [
       {
-        "path": "dist/index.js",
+        "path": "/api/cron",
         "schedule": "0 0 * * * "
       }],
     "public": true,
