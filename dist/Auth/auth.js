@@ -52,10 +52,6 @@ router.post("/register", (req, res) => __awaiter(void 0, void 0, void 0, functio
     let encrypted = cipher.update(keypair.secretKey.toString(), 'utf8', 'hex');
     encrypted += cipher.final('hex');
     console.log(encrypted);
-    const decipher = crypto_1.default.createDecipheriv(algorithm, key, iv);
-    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
-    console.log(decrypted);
     try {
         const salt = yield bcrypt_1.default.genSalt(10);
         const hashpassword = yield bcrypt_1.default.hash(password, salt);
@@ -68,13 +64,6 @@ router.post("/register", (req, res) => __awaiter(void 0, void 0, void 0, functio
                     publickey: keypair.publicKey.toBase58(),
                     privatekey: encrypted,
                     username
-                }
-            });
-            yield prisma.steps.create({
-                data: {
-                    userid: user.id,
-                    steps: "0",
-                    day: new Date().toISOString()
                 }
             });
             const token = jsonwebtoken_1.default.sign({ id: user.id }, "JWTTOKEN", { expiresIn: 365 });

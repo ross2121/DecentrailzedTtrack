@@ -38,10 +38,8 @@ router.post("/register",async(req,res:any)=>{
     let encrypted = cipher.update(keypair.secretKey.toString(), 'utf8', 'hex');
     encrypted += cipher.final('hex')
     console.log(encrypted);
-    const decipher = crypto.createDecipheriv(algorithm, key, iv);
-    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
-    console.log(decrypted);
+  
+
     try{
     const salt=await bcrypt.genSalt(10);
     const hashpassword=await bcrypt.hash(password,salt);
@@ -54,13 +52,6 @@ router.post("/register",async(req,res:any)=>{
                 publickey:keypair.publicKey.toBase58() ,
                  privatekey:encrypted,
                 username
-            }
-        }) 
-        await prisma.steps.create({
-            data:{
-                userid:user.id,
-                steps:"0",
-                day:new Date().toISOString()  
             }
         })
         const token=jwt.sign({id:user.id},"JWTTOKEN",{expiresIn:365});
