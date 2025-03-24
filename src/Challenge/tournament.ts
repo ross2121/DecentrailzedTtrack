@@ -231,7 +231,10 @@ router.post("/challenge/join/public/:id",async(req:any,res:any)=>{
      for(let i=0;i<challenge?.members.length;i++){
         if(challenge.members[i]==user.id){
             ch=true;
-        }
+        }  
+
+
+        
      }
      if(ch){
         console.log("check");
