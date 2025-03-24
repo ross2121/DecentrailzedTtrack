@@ -7,11 +7,6 @@
         "dest": "dist/index.js"
       }
     ],
-    "crons": [
-      {
-        "path": "/dist/index.js",
-        "schedule": "0 0 * * * "
-      }],
     "public": true,
      "buildCommand": "npm run build",
         "installCommand": "npm install"

@@ -5,13 +5,17 @@ import { PrismaClient } from "@prisma/client";
 import dotenv from "dotenv";
 import bs58 from "bs58"
 import axios from "axios";
+import crypto from "crypto"
+
 import { Transaction,Connection, Keypair, sendAndConfirmTransaction, SystemProgram, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 const prisma=new PrismaClient();
 const connection=new Connection("https://api.devnet.solana.com")
 const router=Router();
 dotenv.config();
 const privatekey=process.env.PRIVATE_KEY;
-
+ const algorithm = 'aes-256-cbc';
+    const key = crypto.scryptSync(process.env.CRYPTO_SECRET || 'your-secret', 'salt', 32);
+    const iv = crypto.randomBytes(16);
 router.post("/create/challenge",async(req:any,res:any)=>{
     const {name,memberqty,Dailystep,Amount,Digital_Currency,days,userid,startdate,enddate}=req.body;
      const verify=challenge.safeParse({name,memberqty,Dailystep,Amount,Digital_Currency,days});
@@ -148,6 +152,7 @@ router.post("/send/wallet",async(req:any,res:any)=>{
            publickey:transaction.signatures[0].publicKey.toBase58()
         }
     })
+   
     console.log("check1");
     console.log("publickey",user?.publickey);
     if(!user){
@@ -155,8 +160,11 @@ router.post("/send/wallet",async(req:any,res:any)=>{
         console.log("no user found");
         return;
     }
+    const decipher = crypto.createDecipheriv(algorithm, key, iv);
+    let decrypted = decipher.update(user.privatekey, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
     try{
-        await recivetransaction(user.privatekey,transaction);
+        await recivetransaction(decrypted,transaction);
         return res.status(200).json({message:"Transaction Successfull"});
     }
     catch(e){
@@ -194,6 +202,9 @@ router.post("/challenge/join/public/:id",async(req:any,res:any)=>{
         console.log("no user found");
         return;
     }
+    const decipher = crypto.createDecipheriv(algorithm, key, iv);
+    let decrypted = decipher.update(user.privatekey, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
     const userprev=await prisma.challenge.findUnique({
         where:{
             id:challenge.id,
@@ -206,7 +217,7 @@ router.post("/challenge/join/public/:id",async(req:any,res:any)=>{
         return res.status(500).json({message:"USer alredy added in the contest"});
     }
     try{
-        await recivetransaction(user.privatekey,decoded); 
+        await recivetransaction(decrypted,decoded); 
 
     }
     catch(e){
@@ -434,8 +445,11 @@ router.post("/challenge/acceptchallenge",async(req:any,res:any)=>{
         res.json({message:"You were not added to the Challenge Kindly ask the user to add you to challenge"});
         return;
     }
-    await prisma.$transaction(async(prisma)=>{
-        const txs=await recivetransaction(user.privatekey,decoded);
+    await prisma.$transaction(async(prisma)=>{ 
+          const decipher = crypto.createDecipheriv(algorithm, key, iv);
+            let decrypted = decipher.update(user.privatekey, 'hex', 'utf8');
+            decrypted += decipher.final('utf8');
+        const txs=await recivetransaction(decrypted,decoded);
         if(!txs){
             return res.json({message:"Transactio failed"});
         } 

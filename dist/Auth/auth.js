@@ -19,6 +19,7 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const web3_js_1 = require("@solana/web3.js");
 const type_1 = require("./type");
 const bcrypt_1 = __importDefault(require("bcrypt"));
+const crypto_1 = __importDefault(require("crypto"));
 const router = (0, express_1.Router)();
 const prisma = new client_1.PrismaClient();
 router.post("/register", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -44,6 +45,17 @@ router.post("/register", (req, res) => __awaiter(void 0, void 0, void 0, functio
         return res.status(400).json({ message: "Username alredy taken" });
     }
     const keypair = web3_js_1.Keypair.generate();
+    const algorithm = 'aes-256-cbc';
+    const key = crypto_1.default.scryptSync(process.env.CRYPTO_SECRET || 'your-secret', 'salt', 32);
+    const iv = crypto_1.default.randomBytes(16);
+    const cipher = crypto_1.default.createCipheriv(algorithm, key, iv);
+    let encrypted = cipher.update(keypair.secretKey.toString(), 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+    console.log(encrypted);
+    const decipher = crypto_1.default.createDecipheriv(algorithm, key, iv);
+    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    console.log(decrypted);
     try {
         const salt = yield bcrypt_1.default.genSalt(10);
         const hashpassword = yield bcrypt_1.default.hash(password, salt);
@@ -54,7 +66,7 @@ router.post("/register", (req, res) => __awaiter(void 0, void 0, void 0, functio
                     email,
                     password: hashpassword,
                     publickey: keypair.publicKey.toBase58(),
-                    privatekey: keypair.secretKey.toString(),
+                    privatekey: encrypted,
                     username
                 }
             });
@@ -94,9 +106,5 @@ router.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function*
     }
     const token = jsonwebtoken_1.default.sign({ id: user.id }, "JWTOKEN");
     return res.status(200).json({ token, user });
-}));
-router.get("/test/:userid", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const userid = req.params.userid;
-    res.json({ message: userid });
 }));
 exports.userrouter = router;

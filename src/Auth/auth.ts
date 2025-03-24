@@ -3,7 +3,7 @@ import { Router } from "express";
 import jwt from "jsonwebtoken";
 import  { Keypair } from "@solana/web3.js"
 import { LoginSchema, UserSchema } from "./type";
-import bcrypt from "bcrypt"
+import bcrypt from "bcrypt";
 import assert from "assert";
 import crypto from "crypto"
 const router=Router();
@@ -31,6 +31,17 @@ router.post("/register",async(req,res:any)=>{
         return res.status(400).json({message:"Username alredy taken"});
     }
     const keypair= Keypair.generate();
+    const algorithm = 'aes-256-cbc';
+    const key = crypto.scryptSync(process.env.CRYPTO_SECRET || 'your-secret', 'salt', 32);
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipheriv(algorithm, key, iv);
+    let encrypted = cipher.update(keypair.secretKey.toString(), 'utf8', 'hex');
+    encrypted += cipher.final('hex')
+    console.log(encrypted);
+    const decipher = crypto.createDecipheriv(algorithm, key, iv);
+    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    console.log(decrypted);
     try{
     const salt=await bcrypt.genSalt(10);
     const hashpassword=await bcrypt.hash(password,salt);
@@ -41,7 +52,7 @@ router.post("/register",async(req,res:any)=>{
                 email,
                 password:hashpassword,
                 publickey:keypair.publicKey.toBase58() ,
-                 privatekey:keypair.secretKey.toString(),
+                 privatekey:encrypted,
                 username
             }
         }) 
@@ -80,9 +91,5 @@ router.post("/signin",async(req:any,res:any)=>{
     }
     const token=jwt.sign({id:user.id},"JWTOKEN");
     return res.status(200).json({token,user});
-})
-router.get("/test/:userid",async(req,res)=>{
-    const userid=req.params.userid;
-    res.json({message:userid});
 })
 export const userrouter=router;
