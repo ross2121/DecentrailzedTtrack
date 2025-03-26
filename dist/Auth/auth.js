@@ -96,4 +96,31 @@ router.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function*
     const token = jsonwebtoken_1.default.sign({ id: user.id }, "JWTOKEN");
     return res.status(200).json({ token, user });
 }));
+router.get("/all/users", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const searchTerm = req.query.search;
+        const users = yield prisma.user.findMany({
+            where: searchTerm ? {
+                username: {
+                    contains: searchTerm,
+                    mode: 'insensitive'
+                }
+            } : {},
+            select: {
+                id: true,
+                username: true
+            }
+        });
+        return res.status(200).json({
+            success: true,
+            users: users.map(({ id, username }) => ({ id, username }))
+        });
+    }
+    catch (error) {
+        return res.status(500).json({
+            success: false,
+            error: "Failed to fetch users"
+        });
+    }
+}));
 exports.userrouter = router;
