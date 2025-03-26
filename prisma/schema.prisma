@@ -23,6 +23,7 @@ model User{
   privatekey String
   Friends     String[]
   Request      String[]
+  RequestFriend String[]
   challenge Challenge[]
   Notification String[]
   Participated   String[]

@@ -96,20 +96,34 @@ router.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function*
     const token = jsonwebtoken_1.default.sign({ id: user.id }, "JWTOKEN");
     return res.status(200).json({ token, user });
 }));
-router.get("/all/users", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+// router.get("/all/users",async(req:any,res:any)=>{
+//     const user=await prisma.user.findMany({});
+//     return res.json({username:user.map((user)=>user.username)});
+// })
+router.get("/all/users/:userid", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const searchTerm = req.query.search;
+        const userid = req.params.userid;
         const users = yield prisma.user.findMany({
-            where: searchTerm ? {
-                username: {
-                    contains: searchTerm,
-                    mode: 'insensitive'
-                }
-            } : {},
+            where: {
+                AND: [
+                    {
+                        id: {
+                            not: userid
+                        }
+                    },
+                    searchTerm ? {
+                        username: {
+                            contains: searchTerm,
+                            mode: 'insensitive'
+                        }
+                    } : {}
+                ]
+            },
             select: {
                 id: true,
                 username: true
-            }
+            },
         });
         return res.status(200).json({
             success: true,

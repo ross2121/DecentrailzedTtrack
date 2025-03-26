@@ -19,12 +19,12 @@ router.post("/add/friend", (req, res) => __awaiter(void 0, void 0, void 0, funct
     if (!username || !userid) {
         return res.status(400).json({ message: "No username or userid found" });
     }
-    const users = yield prisma.user.findUnique({
+    const requestuser = yield prisma.user.findUnique({
         where: {
             id: userid
         }
     });
-    if (!users) {
+    if (!requestuser) {
         return res.status(500).json({ message: "No user found for this particular id" });
     }
     const user = yield prisma.user.findUnique({
@@ -35,24 +35,28 @@ router.post("/add/friend", (req, res) => __awaiter(void 0, void 0, void 0, funct
     if (!user) {
         res.json({ message: "No user found" });
     }
-    console.log("HCke");
-    yield prisma.user.update({
-        where: {
-            username: username
-        }, data: {
-            Request: {
-                push: users === null || users === void 0 ? void 0 : users.username
+    prisma.$transaction((prisma) => __awaiter(void 0, void 0, void 0, function* () {
+        yield prisma.user.update({
+            where: {
+                username: username
+            }, data: {
+                Request: {
+                    push: requestuser === null || requestuser === void 0 ? void 0 : requestuser.username
+                }
             }
-        }
-    });
-    yield prisma.user.update({
-        where: {
-            id: userid
-        }, data: {
-            Notification: { push: `Friend request from ${user === null || user === void 0 ? void 0 : user.username}` }
-        }
-    });
-    return res.status(200).json({ message: "Requested send to you friend" });
+        });
+        yield prisma.user.update({
+            where: {
+                id: userid
+            }, data: {
+                RequestFriend: {
+                    push: user === null || user === void 0 ? void 0 : user.username
+                }
+            }
+        });
+        return res.status(200).json({ message: "Requested send to you friend" });
+    }));
+    return res.status(500).json({ message: "Failed" });
 }));
 router.get("/friend/request/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const id = req.params.id;
@@ -69,6 +73,18 @@ router.get("/friend/request/:id", (req, res) => __awaiter(void 0, void 0, void 0
     }
     return res.json({ message: user.Request });
 }));
+router.get("/alredy/frien/:userdid", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const userid = req.params.userdid;
+    if (!userid) {
+        return res.status(500).json({ message: "No user found for this id" });
+    }
+    const users = yield prisma.user.findUnique({
+        where: {
+            id: userid
+        }
+    });
+    return res.status(200).json({ username: users === null || users === void 0 ? void 0 : users.RequestFriend });
+}));
 router.get("/get/friends/:userid", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const userid = req.params.userid;
     if (!userid) {
@@ -80,18 +96,6 @@ router.get("/get/friends/:userid", (req, res) => __awaiter(void 0, void 0, void 
         }
     });
     return res.json({ user: user === null || user === void 0 ? void 0 : user.Friends });
-}));
-router.post("/tews", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    yield prisma.challenge.update({
-        where: {
-            id: "28872c8e-56e8-4e3e-ba29-03174444db19"
-        }, data: {
-            Payoutpeople: {
-                push: "a2fa595c-b063-4c36-ad03-c3fbb284309a"
-            }
-        }
-    });
-    return res.json({ message: "pushed succesfully" });
 }));
 router.post("/test/step", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { step } = req.body;

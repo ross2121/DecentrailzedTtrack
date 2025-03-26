@@ -7,12 +7,12 @@ router.post("/add/friend",async(req:any,res:any)=>{
    if(!username||!userid){
    return  res.status(400).json({message:"No username or userid found"});
    }
-   const users=await prisma.user.findUnique({
+   const requestuser=await prisma.user.findUnique({
     where:{
         id:userid
     }
    })
-   if(!users){
+   if(!requestuser){
     return res.status(500).json({message:"No user found for this particular id"})
    }
    const user=await prisma.user.findUnique({
@@ -22,14 +22,14 @@ router.post("/add/friend",async(req:any,res:any)=>{
    }) 
    if(!user){
     res.json({message:"No user found"});
-   }  
-   console.log("HCke"); 
+   }
+   prisma.$transaction(async(prisma:any)=>{
     await prisma.user.update({
         where:{
             username:username
         },data:{
             Request:{
-                push:users?.username
+                push:requestuser?.username
             }
         }
     })
@@ -37,11 +37,14 @@ router.post("/add/friend",async(req:any,res:any)=>{
         where:{
             id:userid
         },data:{
-            Notification:
-             {push:`Friend request from ${user?.username}`}
+            RequestFriend:{
+                push:user?.username
+            }
         }
     })
-   return res.status(200).json({message:"Requested send to you friend"});
+    return res.status(200).json({message:"Requested send to you friend"});
+   })  
+   return res.status(500).json({message:"Failed"});
 })
 router.get("/friend/request/:id",async(req:any,res:any)=>{
     const id=req.params.id;
@@ -58,6 +61,18 @@ router.get("/friend/request/:id",async(req:any,res:any)=>{
     }
   return res.json({message:user.Request});
 })
+router.get("/alredy/frien/:userdid",async(req:any,res:any)=>{
+    const userid=req.params.userdid;
+    if(!userid){
+        return res.status(500).json({message:"No user found for this id"})
+    }
+    const users=await prisma.user.findUnique({
+        where:{
+         id:userid
+        }
+    })
+    return res.status(200).json({username:users?.RequestFriend})
+})
 router.get("/get/friends/:userid",async(req:any,res:any)=>{
     const userid=req.params.userid;
     if(!userid){
@@ -70,18 +85,7 @@ router.get("/get/friends/:userid",async(req:any,res:any)=>{
     })
     return res.json({user:user?.Friends});
 })
-router.post("/tews",async(req:any,res:any)=>{
-    await prisma.challenge.update({
-       where:{
-        id:"28872c8e-56e8-4e3e-ba29-03174444db19"
-       },data:{
-          Payoutpeople:{
-            push:"a2fa595c-b063-4c36-ad03-c3fbb284309a"
-          } 
-       }
-    })
-    return res.json({message:"pushed succesfully"});
-})
+
 router.post("/test/step",async(req:any,res:any)=>{
     const {step}=req.body;
     const daten=new Date().toISOString();

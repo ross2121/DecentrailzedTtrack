@@ -88,24 +88,33 @@ router.post("/signin",async(req:any,res:any)=>{
 //     return res.json({username:user.map((user)=>user.username)});
 // })
 
-interface QueryParams {
-    search?: string;
-}
 
-router.get("/all/users", async (req:any,res:any) => {
+
+router.get("/all/users/:userid", async (req:any, res:any) => {
     try {
-        const searchTerm = req.query.search;
+        const searchTerm = req.query.search as string;
+        const userid = req.params.userid;
+
         const users = await prisma.user.findMany({
-            where: searchTerm ? {
-                username: {
-                    contains: searchTerm,
-                    mode: 'insensitive'
-                }
-            } : {},
+            where: {
+                AND: [
+                    {
+                        id: {
+                            not: userid
+                        }
+                    },
+                    searchTerm ? {
+                        username: {
+                            contains: searchTerm,
+                            mode: 'insensitive'
+                        }
+                    } : {}
+                ]
+            },
             select: {
                 id: true,
                 username: true
-            }
+            },
         });
 
         return res.status(200).json({
