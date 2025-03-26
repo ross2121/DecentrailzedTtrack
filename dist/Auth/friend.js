@@ -110,9 +110,6 @@ router.post("/test/step", (req, res) => __awaiter(void 0, void 0, void 0, functi
     });
     return res.json({ message: "send succesfully" });
 }));
-router.get("/test/test", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    return res.json({ message: "Checkeddd " });
-}));
 router.post("/accept/friend", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { userid, username, bool } = req.body;
     if (!userid || !username) {
@@ -131,21 +128,24 @@ router.post("/accept/friend", (req, res) => __awaiter(void 0, void 0, void 0, fu
         return res.status(400).json({ message: "No user found for that paricular id" });
     }
     if (bool) {
-        yield prisma.user.update({
+        const users = yield prisma.user.update({
             where: {
                 id: userid,
             }, data: {
                 Friends: {
                     push: username
+                },
+                Request: {
+                    set: user.Request.filter(el => el !== username)
                 }
             }
         });
         yield prisma.user.update({
             where: {
-                id: userid,
+                username: username
             }, data: {
-                Request: {
-                    set: user.Request.filter(el => el !== username)
+                RequestFriend: {
+                    set: user.RequestFriend.filter(el => el !== users.username)
                 }
             }
         });

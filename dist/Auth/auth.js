@@ -104,14 +104,18 @@ router.get("/all/users/:userid", (req, res) => __awaiter(void 0, void 0, void 0,
     try {
         const searchTerm = req.query.search;
         const userid = req.params.userid;
+        // Get current user with friends and requests
+        const currentUser = yield prisma.user.findUnique({
+            where: { id: userid },
+            select: {
+                RequestFriend: true,
+                Friends: true
+            }
+        });
         const users = yield prisma.user.findMany({
             where: {
                 AND: [
-                    {
-                        id: {
-                            not: userid
-                        }
-                    },
+                    { id: { not: userid } },
                     searchTerm ? {
                         username: {
                             contains: searchTerm,
@@ -123,11 +127,26 @@ router.get("/all/users/:userid", (req, res) => __awaiter(void 0, void 0, void 0,
             select: {
                 id: true,
                 username: true
-            },
+            }
+        });
+        const usersWithStatus = users.map(user => {
+            var _a, _b;
+            let status = "ADD";
+            if ((_a = currentUser === null || currentUser === void 0 ? void 0 : currentUser.RequestFriend) === null || _a === void 0 ? void 0 : _a.includes(user.id)) {
+                status = "requested";
+            }
+            else if ((_b = currentUser === null || currentUser === void 0 ? void 0 : currentUser.Friends) === null || _b === void 0 ? void 0 : _b.includes(user.id)) {
+                status = "accepted";
+            }
+            return {
+                id: user.id,
+                username: user.username,
+                status
+            };
         });
         return res.status(200).json({
             success: true,
-            users: users.map(({ id, username }) => ({ id, username }))
+            users: usersWithStatus
         });
     }
     catch (error) {

@@ -89,20 +89,23 @@ router.post("/signin",async(req:any,res:any)=>{
 // })
 
 
-
-router.get("/all/users/:userid", async (req:any, res:any) => {
+router.get("/all/users/:userid", async (req: any, res: any) => {
     try {
         const searchTerm = req.query.search as string;
         const userid = req.params.userid;
 
+        // Get current user with friends and requests
+        const currentUser = await prisma.user.findUnique({
+            where: { id: userid },
+            select: {
+                RequestFriend: true,
+            Friends: true
+            }
+        });
         const users = await prisma.user.findMany({
             where: {
                 AND: [
-                    {
-                        id: {
-                            not: userid
-                        }
-                    },
+                    { id: { not: userid } },
                     searchTerm ? {
                         username: {
                             contains: searchTerm,
@@ -114,12 +117,25 @@ router.get("/all/users/:userid", async (req:any, res:any) => {
             select: {
                 id: true,
                 username: true
-            },
+            }
+        });
+        const usersWithStatus = users.map(user => {
+            let status = "ADD";
+            if (currentUser?.RequestFriend?.includes(user.id)) {
+                status = "requested";
+            } else if (currentUser?.Friends?.includes(user.id)) {
+                status = "accepted";
+            }
+            return {
+                id: user.id,
+                username: user.username,
+                status
+            };
         });
 
         return res.status(200).json({
             success: true,
-            users: users.map(({id, username}) => ({id, username}))
+            users: usersWithStatus
         });
     } catch (error) {
         return res.status(500).json({

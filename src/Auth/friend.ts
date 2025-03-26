@@ -99,10 +99,7 @@ router.post("/test/step",async(req:any,res:any)=>{
     }) 
    return res.json({message:"send succesfully"});
 })
-router.get("/test/test",async(req:any,res:any)=>{
-    
-    return res.json({message:"Checkeddd "})
-})
+
 router.post("/accept/friend",async(req:any,res:any)=>{
     const  {userid,username,bool}=req.body;
     if(!userid||!username){
@@ -121,22 +118,25 @@ router.post("/accept/friend",async(req:any,res:any)=>{
         return res.status(400).json({message:"No user found for that paricular id"});
     }
     if(bool){
-        await prisma.user.update({
+        const users=await prisma.user.update({
             where:{
                 id:userid,
             },data:{
                 Friends:{
                     push:username
+                },
+                Request:{
+                    set:user.Request.filter(el=>el!==username)
                 }
             }
         })
         await prisma.user.update({
             where:{
-                id:userid,
+               username:username
             },data:{
-                Request:{
-                    set:user.Request.filter(el=>el!==username)
-                }
+               RequestFriend:{
+                set:user.RequestFriend.filter(el=>el!==users.username)
+               }
             }
         })
         return res.status(200).json({message:"Friend is added your list"})
