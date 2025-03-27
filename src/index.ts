@@ -15,6 +15,11 @@ app.use(cors());
 app.use("/api/v1",userrouter);
 app.use("/api/v1",challenges);
 app.use("/api/v1",Friend);
+app.get("/test",async(req:any,res:any)=>{
+    const trydd=await axios.get("https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd");
+    console.log(trydd.data);
+    return res.json({sol:trydd.data.solana.usd});
+})
 async function Gettime() {
     const enddatespublic = await prisma.challenge.findMany({ 
     });    
