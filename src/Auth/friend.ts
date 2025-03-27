@@ -21,7 +21,7 @@ router.post("/add/friend",async(req:any,res:any)=>{
       }
    }) 
    if(!user){
-    res.json({message:"No user found"});
+    return res.json({message:"No user found"});
    }
    prisma.$transaction(async(prisma:any)=>{
     await prisma.user.update({
@@ -44,7 +44,7 @@ router.post("/add/friend",async(req:any,res:any)=>{
     })
     return res.status(200).json({message:"Requested send to you friend"});
    })  
-   return res.status(500).json({message:"Failed"});
+//    return res.status(500).json({message:"Failed"});
 })
 router.get("/friend/request/:id",async(req:any,res:any)=>{
     const id=req.params.id;

@@ -104,7 +104,6 @@ router.get("/all/users/:userid", (req, res) => __awaiter(void 0, void 0, void 0,
     try {
         const searchTerm = req.query.search;
         const userid = req.params.userid;
-        // Get current user with friends and requests
         const currentUser = yield prisma.user.findUnique({
             where: { id: userid },
             select: {
@@ -132,10 +131,10 @@ router.get("/all/users/:userid", (req, res) => __awaiter(void 0, void 0, void 0,
         const usersWithStatus = users.map(user => {
             var _a, _b;
             let status = "ADD";
-            if ((_a = currentUser === null || currentUser === void 0 ? void 0 : currentUser.RequestFriend) === null || _a === void 0 ? void 0 : _a.includes(user.id)) {
+            if ((_a = currentUser === null || currentUser === void 0 ? void 0 : currentUser.RequestFriend) === null || _a === void 0 ? void 0 : _a.includes(user.username)) {
                 status = "requested";
             }
-            else if ((_b = currentUser === null || currentUser === void 0 ? void 0 : currentUser.Friends) === null || _b === void 0 ? void 0 : _b.includes(user.id)) {
+            else if ((_b = currentUser === null || currentUser === void 0 ? void 0 : currentUser.Friends) === null || _b === void 0 ? void 0 : _b.includes(user.username)) {
                 status = "accepted";
             }
             return {

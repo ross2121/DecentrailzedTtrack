@@ -93,13 +93,11 @@ router.get("/all/users/:userid", async (req: any, res: any) => {
     try {
         const searchTerm = req.query.search as string;
         const userid = req.params.userid;
-
-        // Get current user with friends and requests
         const currentUser = await prisma.user.findUnique({
             where: { id: userid },
             select: {
                 RequestFriend: true,
-            Friends: true
+                 Friends: true
             }
         });
         const users = await prisma.user.findMany({
@@ -121,9 +119,9 @@ router.get("/all/users/:userid", async (req: any, res: any) => {
         });
         const usersWithStatus = users.map(user => {
             let status = "ADD";
-            if (currentUser?.RequestFriend?.includes(user.id)) {
+            if (currentUser?.RequestFriend?.includes(user.username)) {
                 status = "requested";
-            } else if (currentUser?.Friends?.includes(user.id)) {
+            } else if (currentUser?.Friends?.includes(user.username)) {
                 status = "accepted";
             }
             return {

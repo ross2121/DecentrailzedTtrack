@@ -33,7 +33,7 @@ router.post("/add/friend", (req, res) => __awaiter(void 0, void 0, void 0, funct
         }
     });
     if (!user) {
-        res.json({ message: "No user found" });
+        return res.json({ message: "No user found" });
     }
     prisma.$transaction((prisma) => __awaiter(void 0, void 0, void 0, function* () {
         yield prisma.user.update({
@@ -56,7 +56,7 @@ router.post("/add/friend", (req, res) => __awaiter(void 0, void 0, void 0, funct
         });
         return res.status(200).json({ message: "Requested send to you friend" });
     }));
-    return res.status(500).json({ message: "Failed" });
+    //    return res.status(500).json({message:"Failed"});
 }));
 router.get("/friend/request/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const id = req.params.id;
