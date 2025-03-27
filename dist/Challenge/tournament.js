@@ -27,7 +27,6 @@ dotenv_1.default.config();
 const privatekey = process.env.PRIVATE_KEY;
 const algorithm = 'aes-256-cbc';
 const key = crypto_1.default.scryptSync(process.env.CRYPTO_SECRET || 'your-secret', 'salt', 32);
-const iv = crypto_1.default.randomBytes(16);
 router.post("/create/challenge", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { name, memberqty, Dailystep, Amount, Digital_Currency, days, userid, startdate, enddate } = req.body;
     const verify = type_1.challenge.safeParse({ name, memberqty, Dailystep, Amount, Digital_Currency, days });
@@ -150,8 +149,6 @@ router.get("/participated/:userid", (req, res) => __awaiter(void 0, void 0, void
 }));
 router.post("/send/wallet", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { tx } = req.body;
-    console.log(tx);
-    console.log("tex");
     const transaction = web3_js_1.Transaction.from(tx.data);
     console.log(transaction);
     const user = yield prisma.user.findFirst({
@@ -166,16 +163,20 @@ router.post("/send/wallet", (req, res) => __awaiter(void 0, void 0, void 0, func
         console.log("no user found");
         return;
     }
+    // const bufferfrom=Buffer.from(user.iv,'hex')
+    // @ts-ignore
+    const iv = Buffer.from(user.iv, 'hex');
     const decipher = crypto_1.default.createDecipheriv(algorithm, key, iv);
     let decrypted = decipher.update(user.privatekey, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
+    console.log(decrypted);
     try {
         yield recivetransaction(decrypted, transaction);
         return res.status(200).json({ message: "Transaction Successfull" });
     }
     catch (e) {
         console.log("failed");
-        return res.json({ message: "Transaction failed", e });
+        return res.status(400).json({ message: "Transaction failed", e });
     }
 }));
 router.post("/challenge/join/public/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -207,6 +208,8 @@ router.post("/challenge/join/public/:id", (req, res) => __awaiter(void 0, void 0
         console.log("no user found");
         return;
     }
+    // @ts-ignore
+    const iv = Buffer.from(user.iv, 'hex');
     const decipher = crypto_1.default.createDecipheriv(algorithm, key, iv);
     let decrypted = decipher.update(user.privatekey, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
@@ -440,6 +443,8 @@ router.post("/challenge/acceptchallenge", (req, res) => __awaiter(void 0, void 0
         return;
     }
     yield prisma.$transaction((prisma) => __awaiter(void 0, void 0, void 0, function* () {
+        // @ts-ignore
+        const iv = Buffer.from(user.iv, 'hex');
         const decipher = crypto_1.default.createDecipheriv(algorithm, key, iv);
         let decrypted = decipher.update(user.privatekey, 'hex', 'utf8');
         decrypted += decipher.final('utf8');

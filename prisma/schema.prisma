@@ -21,6 +21,7 @@ model User{
   password String
   publickey String
   privatekey String
+  iv         String?
   Friends     String[]
   Request      String[]
   RequestFriend String[]

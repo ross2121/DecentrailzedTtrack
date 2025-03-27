@@ -4,7 +4,6 @@ import jwt from "jsonwebtoken";
 import  { Keypair } from "@solana/web3.js"
 import { LoginSchema, UserSchema } from "./type";
 import bcrypt from "bcrypt";
-import assert from "assert";
 import crypto from "crypto"
 const router=Router();
 const prisma=new PrismaClient();
@@ -37,9 +36,6 @@ router.post("/register",async(req,res:any)=>{
     const cipher = crypto.createCipheriv(algorithm, key, iv);
     let encrypted = cipher.update(keypair.secretKey.toString(), 'utf8', 'hex');
     encrypted += cipher.final('hex')
-    console.log(encrypted);
-  
-
     try{
     const salt=await bcrypt.genSalt(10);
     const hashpassword=await bcrypt.hash(password,salt);
@@ -51,7 +47,8 @@ router.post("/register",async(req,res:any)=>{
                 password:hashpassword,
                 publickey:keypair.publicKey.toBase58() ,
                  privatekey:encrypted,
-                username
+                username,
+                iv:iv.toString('hex')
             }
         })
         const token=jwt.sign({id:user.id},"JWTTOKEN",{expiresIn:365});

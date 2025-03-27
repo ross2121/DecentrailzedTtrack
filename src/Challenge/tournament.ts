@@ -6,7 +6,6 @@ import dotenv from "dotenv";
 import bs58 from "bs58"
 import axios from "axios";
 import crypto from "crypto"
-
 import { Transaction,Connection, Keypair, sendAndConfirmTransaction, SystemProgram, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 const prisma=new PrismaClient();
 const connection=new Connection("https://api.devnet.solana.com")
@@ -15,7 +14,6 @@ dotenv.config();
 const privatekey=process.env.PRIVATE_KEY;
  const algorithm = 'aes-256-cbc';
     const key = crypto.scryptSync(process.env.CRYPTO_SECRET || 'your-secret', 'salt', 32);
-    const iv = crypto.randomBytes(16);
 router.post("/create/challenge",async(req:any,res:any)=>{
     const {name,memberqty,Dailystep,Amount,Digital_Currency,days,userid,startdate,enddate}=req.body;
      const verify=challenge.safeParse({name,memberqty,Dailystep,Amount,Digital_Currency,days});
@@ -54,7 +52,6 @@ router.post("/create/challenge",async(req:any,res:any)=>{
         return res.status(500).json({ message: "Error creating Challenge", error });
      }    
 })
-
 router.get("/challenge/user/:id",async(req:any,res:any)=>{
     const id=req.params.id;
    const challenge=await prisma.challenge.findUnique({
@@ -143,8 +140,6 @@ router.get("/participated/:userid",async(req:any,res:any)=>{
 })
 router.post("/send/wallet",async(req:any,res:any)=>{
     const {tx}=req.body;
-    console.log(tx);
-    console.log("tex");
     const transaction=Transaction.from(tx.data);
     console.log(transaction);
     const user=await prisma.user.findFirst({
@@ -152,7 +147,6 @@ router.post("/send/wallet",async(req:any,res:any)=>{
            publickey:transaction.signatures[0].publicKey.toBase58()
         }
     })
-   
     console.log("check1");
     console.log("publickey",user?.publickey);
     if(!user){
@@ -160,16 +154,20 @@ router.post("/send/wallet",async(req:any,res:any)=>{
         console.log("no user found");
         return;
     }
-    const decipher = crypto.createDecipheriv(algorithm, key, iv);
+    // const bufferfrom=Buffer.from(user.iv,'hex')
+    // @ts-ignore
+    const iv = Buffer.from(user.iv, 'hex');
+    const decipher = crypto.createDecipheriv(algorithm, key,iv);
     let decrypted = decipher.update(user.privatekey, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
+    console.log(decrypted)
     try{
         await recivetransaction(decrypted,transaction);
         return res.status(200).json({message:"Transaction Successfull"});
     }
     catch(e){
         console.log("failed");
-        return res.json({message:"Transaction failed",e});
+        return res.status(400).json({message:"Transaction failed",e});
     }
 })
 router.post("/challenge/join/public/:id",async(req:any,res:any)=>{
@@ -202,6 +200,8 @@ router.post("/challenge/join/public/:id",async(req:any,res:any)=>{
         console.log("no user found");
         return;
     }
+    // @ts-ignore
+    const iv = Buffer.from(user.iv, 'hex');
     const decipher = crypto.createDecipheriv(algorithm, key, iv);
     let decrypted = decipher.update(user.privatekey, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
@@ -231,10 +231,7 @@ router.post("/challenge/join/public/:id",async(req:any,res:any)=>{
      for(let i=0;i<challenge?.members.length;i++){
         if(challenge.members[i]==user.id){
             ch=true;
-        }  
-
-
-        
+        } 
      }
      if(ch){
         console.log("check");
@@ -449,6 +446,8 @@ router.post("/challenge/acceptchallenge",async(req:any,res:any)=>{
         return;
     }
     await prisma.$transaction(async(prisma)=>{ 
+        // @ts-ignore
+        const iv = Buffer.from(user.iv, 'hex');
           const decipher = crypto.createDecipheriv(algorithm, key, iv);
             let decrypted = decipher.update(user.privatekey, 'hex', 'utf8');
             decrypted += decipher.final('utf8');

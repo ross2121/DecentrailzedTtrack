@@ -51,7 +51,6 @@ router.post("/register", (req, res) => __awaiter(void 0, void 0, void 0, functio
     const cipher = crypto_1.default.createCipheriv(algorithm, key, iv);
     let encrypted = cipher.update(keypair.secretKey.toString(), 'utf8', 'hex');
     encrypted += cipher.final('hex');
-    console.log(encrypted);
     try {
         const salt = yield bcrypt_1.default.genSalt(10);
         const hashpassword = yield bcrypt_1.default.hash(password, salt);
@@ -63,7 +62,8 @@ router.post("/register", (req, res) => __awaiter(void 0, void 0, void 0, functio
                     password: hashpassword,
                     publickey: keypair.publicKey.toBase58(),
                     privatekey: encrypted,
-                    username
+                    username,
+                    iv: iv.toString('hex')
                 }
             });
             const token = jsonwebtoken_1.default.sign({ id: user.id }, "JWTTOKEN", { expiresIn: 365 });
