@@ -27,6 +27,11 @@ app.use((0, cors_1.default)());
 app.use("/api/v1", auth_1.userrouter);
 app.use("/api/v1", tournament_1.challenges);
 app.use("/api/v1", friend_1.Friend);
+app.get("/test", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const trydd = yield axios_1.default.get("https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd");
+    console.log(trydd.data);
+    return res.json({ sol: trydd.data.solana.usd });
+}));
 function Gettime() {
     return __awaiter(this, void 0, void 0, function* () {
         const enddatespublic = yield prisma.challenge.findMany({});
