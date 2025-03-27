@@ -261,25 +261,30 @@ router.post("/challenge/join/public/:id",async(req:any,res:any)=>{
 
 })
 router.get("/total/steps",async(req:any,res:any)=>{
-    const today = new Date().toISOString().split('T')[0];
-    console.log("dasdasddsda");
-    const user=await prisma.user.findMany({
-          include:{
-            step:{
-                where:{
-                    day:{
-                        gte:today,
-                         lt:new Date(new Date(today).setDate(new Date(today).getDate() + 1)).toISOString()    
-                    }
-                }
-            }
-          }
-    })
-    const formattedSteps = user.map(user => ({
-        username: user.username,
-        steps: user.step[0]?.steps || 0,
-    }));
-    return res.status(200).json({data:formattedSteps});
+    const today = new Date();
+today.setHours(0, 0, 0, 0);
+const tomorrow = new Date(today);
+tomorrow.setDate(tomorrow.getDate() + 1);
+
+const users = await prisma.user.findMany({
+  include: {
+    step: {
+      where: {
+        day: {
+          gte: today.toISOString(),
+          lt: tomorrow.toISOString(), 
+        },
+      },
+    },
+  },
+});
+
+const formattedSteps = users.map(user => ({
+  username: user.username,
+  steps: user.step[0]?.steps||0 ,
+}));
+
+return res.status(200).json({ data: formattedSteps });
 })
 router.post("/regular/update",async(req:any,res:any)=>{
     const {steps,userid}=req.body;
@@ -294,37 +299,41 @@ router.post("/regular/update",async(req:any,res:any)=>{
         }
         
     })
-    const today = new Date().toISOString().split('T')[0];
-    if(!user){
-     return  res.status(500).json({message:"No user found"});
-    }
-    const existing=await prisma.steps.findFirst({
-        where:{
-            userid:user.id,
-            day:today
-        },
-        
-    })
-    if(existing){
-     await prisma.steps.update({
-        where:{
-            id:existing.id
-        },
-        data:{
-            steps:steps,
-            
-        }
-     })
-    }else{
-       await prisma.steps.create({
-        data:{
-            userid:user.id,
-            steps:steps,
-            day:today
-        }
-       })
-    }
-    return res.status(200).json({message:"Succesfully updated the user"}); 
+const now = new Date();
+const offsetIST = 330; 
+const todayIST = new Date(now.getTime() + offsetIST * 60 * 1000).toISOString().split('T')[0];
+
+if (!user) {
+  return res.status(500).json({ message: "No user found" });
+}
+
+const existing = await prisma.steps.findFirst({
+  where: {
+    userid: user.id,
+    day: todayIST,
+  },
+});
+
+if (existing) {
+  await prisma.steps.update({
+    where: {
+      id: existing.id,
+    },
+    data: {
+      steps: steps,
+    },
+  });
+} else {
+  await prisma.steps.create({
+    data: {
+      userid: user.id,
+      steps: steps,
+      day: todayIST, // Store IST-adjusted date
+    },
+  });
+}
+
+return res.status(200).json({ message: "Successfully updated the user" });
 })
 router.post("/challenge/finish", async (req: any, res: any) => {
     const { id } = req.body;

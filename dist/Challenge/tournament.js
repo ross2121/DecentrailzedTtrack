@@ -268,21 +268,23 @@ router.post("/challenge/join/public/:id", (req, res) => __awaiter(void 0, void 0
     }
 }));
 router.get("/total/steps", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const today = new Date().toISOString().split('T')[0];
-    console.log("dasdasddsda");
-    const user = yield prisma.user.findMany({
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const users = yield prisma.user.findMany({
         include: {
             step: {
                 where: {
                     day: {
-                        gte: today,
-                        lt: new Date(new Date(today).setDate(new Date(today).getDate() + 1)).toISOString()
-                    }
-                }
-            }
-        }
+                        gte: today.toISOString(),
+                        lt: tomorrow.toISOString(),
+                    },
+                },
+            },
+        },
     });
-    const formattedSteps = user.map(user => {
+    const formattedSteps = users.map(user => {
         var _a;
         return ({
             username: user.username,
@@ -303,24 +305,26 @@ router.post("/regular/update", (req, res) => __awaiter(void 0, void 0, void 0, f
             challenge: true
         }
     });
-    const today = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const offsetIST = 330;
+    const todayIST = new Date(now.getTime() + offsetIST * 60 * 1000).toISOString().split('T')[0];
     if (!user) {
         return res.status(500).json({ message: "No user found" });
     }
     const existing = yield prisma.steps.findFirst({
         where: {
             userid: user.id,
-            day: today
+            day: todayIST,
         },
     });
     if (existing) {
         yield prisma.steps.update({
             where: {
-                id: existing.id
+                id: existing.id,
             },
             data: {
                 steps: steps,
-            }
+            },
         });
     }
     else {
@@ -328,11 +332,11 @@ router.post("/regular/update", (req, res) => __awaiter(void 0, void 0, void 0, f
             data: {
                 userid: user.id,
                 steps: steps,
-                day: today
-            }
+                day: todayIST, // Store IST-adjusted date
+            },
         });
     }
-    return res.status(200).json({ message: "Succesfully updated the user" });
+    return res.status(200).json({ message: "Successfully updated the user" });
 }));
 router.post("/challenge/finish", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.body;
