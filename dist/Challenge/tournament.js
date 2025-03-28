@@ -268,18 +268,17 @@ router.post("/challenge/join/public/:id", (req, res) => __awaiter(void 0, void 0
     }
 }));
 router.get("/total/steps", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    // Get current date in IST (India is UTC+5:30)
+    const now = new Date();
+    const offset = 5.5 * 60 * 60 * 1000; // IST offset in milliseconds
+    const istTime = new Date(now.getTime() + offset);
+    // Format as YYYY-MM-DD (same format as stored in DB)
+    const todayStr = istTime.toISOString().split('T')[0]; // "2025-03-28"
     const users = yield prisma.user.findMany({
         include: {
             step: {
                 where: {
-                    day: {
-                        gte: today.toISOString(),
-                        lt: tomorrow.toISOString(),
-                    },
+                    day: todayStr // Directly compare with the date string
                 },
             },
         },

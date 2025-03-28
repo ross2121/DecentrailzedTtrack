@@ -260,32 +260,29 @@ router.post("/challenge/join/public/:id",async(req:any,res:any)=>{
 }
 
 })
-router.get("/total/steps",async(req:any,res:any)=>{
-    const today = new Date();
-today.setHours(0, 0, 0, 0);
-const tomorrow = new Date(today);
-tomorrow.setDate(tomorrow.getDate() + 1);
-
-const users = await prisma.user.findMany({
-  include: {
-    step: {
-      where: {
-        day: {
-          gte: today.toISOString(),
-          lt: tomorrow.toISOString(), 
+router.get("/total/steps", async (req: any, res: any) => {
+    const now = new Date();
+    const offset = 5.5 * 60 * 60 * 1000;
+    const istTime = new Date(now.getTime() + offset);
+    const todayStr = istTime.toISOString().split('T')[0];
+    
+    const users = await prisma.user.findMany({
+        include: {
+            step: {
+                where: {
+                    day: todayStr 
+                },
+            },
         },
-      },
-    },
-  },
+    });
+
+    const formattedSteps = users.map(user => ({
+        username: user.username,
+        steps: user.step[0]?.steps || 0,
+    }));
+
+    return res.status(200).json({ data: formattedSteps });
 });
-
-const formattedSteps = users.map(user => ({
-  username: user.username,
-  steps: user.step[0]?.steps||0 ,
-}));
-
-return res.status(200).json({ data: formattedSteps });
-})
 router.post("/regular/update",async(req:any,res:any)=>{
     const {steps,userid}=req.body;
     if(!steps||!userid){
