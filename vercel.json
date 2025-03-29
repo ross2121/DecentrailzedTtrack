@@ -7,6 +7,12 @@
         "dest": "dist/index.js"
       }
     ],
+    "crons": [
+    {
+      "path": "/api/every-minute",
+      "schedule": "* * * * *"
+    }
+  ],
     "public": true,
      "buildCommand": "npm run build",
         "installCommand": "npm install"
