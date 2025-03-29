@@ -183,9 +183,6 @@ router.post("/challenge/join/public/:id",async(req:any,res:any)=>{
         return  res.json({message:"No Challenge found for that particular id"});
        
     }
-    if(challenge?.members.length>=challenge?.memberqty){
-        return res.status(440).json({message:"Challenge is full"});
-    }
     const tx=req.body.tx;
     const decoded=Transaction.from(tx.data);
     console.log("decoded",decoded); 
@@ -194,6 +191,15 @@ router.post("/challenge/join/public/:id",async(req:any,res:any)=>{
            publickey:decoded.signatures[0].publicKey.toBase58()
         }
     })
+    for(let i=0;i<challenge.members.length;i++){
+        if(challenge.members[i]==user?.id){
+            return res.status(440).json({message:"User alredy exist"})  
+        }
+    }
+    if(challenge?.members.length>=challenge?.memberqty){
+        return res.status(440).json({message:"Challenge is full"});
+    }
+   
     console.log("publickey",user?.publickey);
     if(!user){
         res.json({message:"No user found"});
@@ -255,7 +261,7 @@ router.post("/challenge/join/public/:id",async(req:any,res:any)=>{
         return;
     }
     console.log(privatekey);
-     const transaction=await revertback(privatekey,decoded.signatures[0].publicKey.toBase58())
+     const transaction=await revertback(privatekey,decoded.signatures[0].publicKey.toBase58(),challenge.Amount)
      return transaction;
 }
 
@@ -325,7 +331,7 @@ if (existing) {
     data: {
       userid: user.id,
       steps: steps,
-      day: todayIST, // Store IST-adjusted date
+      day: todayIST, 
     },
   });
 }
@@ -335,61 +341,75 @@ return res.status(200).json({ message: "Successfully updated the user" });
 router.post("/challenge/finish", async (req: any, res: any) => {
     const { id } = req.body;
     const privatekey = process.env.PRIVATE_KEY;
-
     if (!privatekey) {
         return res.status(400).json({ message: "No private key found" });
     }
-
     const challengee = await prisma.challenge.findUnique({
         where: { id },
-    });
+        include:{
+            Payoutpeople:true,
+            Remaingpeople:true
+        }
+    }
+);
 
     if (!challengee) {
         return res.status(400).json({ message: "No challenge found" });
     }
-
-    const equalamount = challengee.Totalamount / challengee.members.length;
-
-    while (challengee.Payoutpeople.length !== 0) {
-        const user = await prisma.user.findUnique({
-            where: { id: challengee.Payoutpeople[0] },
+    const equalamount = Number(challengee.Totalamount / challengee.members.length)*LAMPORTS_PER_SOL;
+    console.log(equalamount);
+    for(let i=0;i<challengee.Payoutpeople.length;i++){
+       const user=await prisma.user.findUnique({
+        where:{
+            id:challengee.Payoutpeople[i].userId
+        }
+       })  
+       if(!user){
+        return res.status(500).json({message:"No user found"});
+       }
+       try{
+        const transaction=await sendtrasaction(privatekey,user.publickey,equalamount)
+        console.log(i);
+       await prisma.payoutPerson.delete({
+        where:{
+            challengeId:challengee.id,
+            userId:user.id
+        }
+       })
+        if(transaction){
+        await prisma.challenge.update({
+            where: { id },
+            data: {
+                Totalamount: challengee.Totalamount - equalamount,
+        
+            },
         });
-
-        if (!user) {
-            return res.status(400).json({ message: "No user found" });
-        }
-
-        try {
-            console.log("Sending transaction...");
-            await sendtrasaction(privatekey, user.publickey, equalamount);
-            console.log("Transaction successful");
-
-            await prisma.challenge.update({
-                where: { id },
-                data: {
-                    Totalamount: challengee.Totalamount - equalamount,
-                    Payoutpeople: {
-                        set: challengee.Payoutpeople.slice(1),
-                    },
-                },
-            });
-        } catch (e) {
-            console.error("Transaction failed:", e);
-
-            await prisma.challenge.update({
-                where: { id },
-                data: {
-                    Remaingpeople: {
-                        push: user.id,
-                    },
-                    Payoutpeople: {
-                        set: challengee.Payoutpeople.slice(1),
-                    },
-                },
-            });
-        }
     }
-
+    else{
+        await prisma.remainingPerson.create({
+            data: {
+              userId:user.id,
+              challengeId:challengee.id
+            },
+        });
+    }
+       }catch(e){
+        prisma.$transaction(async(prisma)=>{
+          await prisma.payoutPerson.delete({
+            where:{
+                userId:user.id,
+                challengeId:challengee.id
+            }
+          })
+          await prisma.remainingPerson.create({
+            data:{
+                userId:user.id,
+                challengeId:challengee.id
+            }
+          })
+        })
+    }
+    }
     return res.status(200).json({ message: "contest Ended Successfully" });
 });
 router.post("/challenge/private",async(req:any,res:any)=>{   
@@ -443,10 +463,16 @@ router.post("/challenge/acceptchallenge",async(req:any,res:any)=>{
         return res.json({message:"No user find"});
 
     }
-    if(!chaalengeid){
+    if(!challenge){
         res.json({message:"No challenge found for pricular that particular id"});
         return;
     }
+     for(let i=0;i<challenge?.members.length;i++){
+           if(challenge.members[i]==user.id){
+            return res.status(400).json("User alredy exist in tournament");
+           }
+     }
+    
     if(!challenge?.Request[username]){
         res.json({message:"You were not added to the Challenge Kindly ask the user to add you to challenge"});
         return;
@@ -478,19 +504,25 @@ router.post("/challenge/acceptchallenge",async(req:any,res:any)=>{
 })
 
 async function sendtrasaction(privatekey:string,publicKey:string,Amount:number){
+    try{
     const decodedKey = bs58.decode(privatekey);
     const keypair=Keypair.fromSecretKey(decodedKey);
     console.log("chekad");
     const transaction=new  Transaction().add(SystemProgram.transfer({
        fromPubkey:keypair.publicKey,
        toPubkey:new PublicKey(publicKey),
-       lamports:Amount*LAMPORTS_PER_SOL
+       lamports:Math.floor(Amount)
     }))
     const send=await connection.sendTransaction(transaction,[keypair]);
     console.log(send);
-    return send;
+    return true;
 }
-async function revertback(privatekey:string,publicKey:string){
+    catch(e){
+        console.log(e);
+        return false;
+    }
+}
+async function revertback(privatekey:string,publicKey:string,amount:number){
     const decodedKey = bs58.decode(privatekey);
    console.log(decodedKey);
     const secretkey=Keypair.fromSecretKey(decodedKey);
@@ -498,7 +530,7 @@ async function revertback(privatekey:string,publicKey:string){
      const transaction=new Transaction().add(SystemProgram.transfer({
         fromPubkey:secretkey.publicKey,
         toPubkey:new PublicKey(publicKey),
-        lamports:LAMPORTS_PER_SOL
+        lamports:Math.floor(LAMPORTS_PER_SOL*amount)
      }))
      const sendtransaction=await sendAndConfirmTransaction(connection,transaction,[secretkey]);
      return sendtransaction;

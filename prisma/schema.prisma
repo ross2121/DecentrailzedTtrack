@@ -49,8 +49,21 @@ model Challenge{
   status     Completed @default(CurrentlyRunning)
   Request   String[]
   PayoutStatus Status @default(pending)
-  Payoutpeople String[]
-  Remaingpeople String[]
+  Payoutpeople PayoutPerson[] 
+  Remaingpeople RemainingPerson[] 
+}
+model PayoutPerson {
+  id          String   @id @default(uuid())
+  challengeId String
+  userId      String   @unique
+  Challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+}
+
+model RemainingPerson {
+  id          String   @id @default(uuid())
+  challengeId String
+  userId      String   @unique
+  Challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
 }
 model Steps{
   id  String @id  @default(uuid())

@@ -191,9 +191,6 @@ router.post("/challenge/join/public/:id", (req, res) => __awaiter(void 0, void 0
         console.log("no chalelenn");
         return res.json({ message: "No Challenge found for that particular id" });
     }
-    if ((challenge === null || challenge === void 0 ? void 0 : challenge.members.length) >= (challenge === null || challenge === void 0 ? void 0 : challenge.memberqty)) {
-        return res.status(440).json({ message: "Challenge is full" });
-    }
     const tx = req.body.tx;
     const decoded = web3_js_1.Transaction.from(tx.data);
     console.log("decoded", decoded);
@@ -202,6 +199,14 @@ router.post("/challenge/join/public/:id", (req, res) => __awaiter(void 0, void 0
             publickey: decoded.signatures[0].publicKey.toBase58()
         }
     });
+    for (let i = 0; i < challenge.members.length; i++) {
+        if (challenge.members[i] == (user === null || user === void 0 ? void 0 : user.id)) {
+            return res.status(440).json({ message: "User alredy exist" });
+        }
+    }
+    if ((challenge === null || challenge === void 0 ? void 0 : challenge.members.length) >= (challenge === null || challenge === void 0 ? void 0 : challenge.memberqty)) {
+        return res.status(440).json({ message: "Challenge is full" });
+    }
     console.log("publickey", user === null || user === void 0 ? void 0 : user.publickey);
     if (!user) {
         res.json({ message: "No user found" });
@@ -263,22 +268,20 @@ router.post("/challenge/join/public/:id", (req, res) => __awaiter(void 0, void 0
             return;
         }
         console.log(privatekey);
-        const transaction = yield revertback(privatekey, decoded.signatures[0].publicKey.toBase58());
+        const transaction = yield revertback(privatekey, decoded.signatures[0].publicKey.toBase58(), challenge.Amount);
         return transaction;
     }
 }));
 router.get("/total/steps", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    // Get current date in IST (India is UTC+5:30)
     const now = new Date();
-    const offset = 5.5 * 60 * 60 * 1000; // IST offset in milliseconds
+    const offset = 5.5 * 60 * 60 * 1000;
     const istTime = new Date(now.getTime() + offset);
-    // Format as YYYY-MM-DD (same format as stored in DB)
-    const todayStr = istTime.toISOString().split('T')[0]; // "2025-03-28"
+    const todayStr = istTime.toISOString().split('T')[0];
     const users = yield prisma.user.findMany({
         include: {
             step: {
                 where: {
-                    day: todayStr // Directly compare with the date string
+                    day: todayStr
                 },
             },
         },
@@ -331,7 +334,7 @@ router.post("/regular/update", (req, res) => __awaiter(void 0, void 0, void 0, f
             data: {
                 userid: user.id,
                 steps: steps,
-                day: todayIST, // Store IST-adjusted date
+                day: todayIST,
             },
         });
     }
@@ -345,45 +348,66 @@ router.post("/challenge/finish", (req, res) => __awaiter(void 0, void 0, void 0,
     }
     const challengee = yield prisma.challenge.findUnique({
         where: { id },
+        include: {
+            Payoutpeople: true,
+            Remaingpeople: true
+        }
     });
     if (!challengee) {
         return res.status(400).json({ message: "No challenge found" });
     }
-    const equalamount = challengee.Totalamount / challengee.members.length;
-    while (challengee.Payoutpeople.length !== 0) {
+    const equalamount = Number(challengee.Totalamount / challengee.members.length) * web3_js_1.LAMPORTS_PER_SOL;
+    console.log(equalamount);
+    for (let i = 0; i < challengee.Payoutpeople.length; i++) {
         const user = yield prisma.user.findUnique({
-            where: { id: challengee.Payoutpeople[0] },
+            where: {
+                id: challengee.Payoutpeople[i].userId
+            }
         });
         if (!user) {
-            return res.status(400).json({ message: "No user found" });
+            return res.status(500).json({ message: "No user found" });
         }
         try {
-            console.log("Sending transaction...");
-            yield sendtrasaction(privatekey, user.publickey, equalamount);
-            console.log("Transaction successful");
-            yield prisma.challenge.update({
-                where: { id },
-                data: {
-                    Totalamount: challengee.Totalamount - equalamount,
-                    Payoutpeople: {
-                        set: challengee.Payoutpeople.slice(1),
-                    },
-                },
+            const transaction = yield sendtrasaction(privatekey, user.publickey, equalamount);
+            console.log(i);
+            yield prisma.payoutPerson.delete({
+                where: {
+                    challengeId: challengee.id,
+                    userId: user.id
+                }
             });
+            if (transaction) {
+                yield prisma.challenge.update({
+                    where: { id },
+                    data: {
+                        Totalamount: challengee.Totalamount - equalamount,
+                    },
+                });
+            }
+            else {
+                yield prisma.remainingPerson.create({
+                    data: {
+                        userId: user.id,
+                        challengeId: challengee.id
+                    },
+                });
+            }
         }
         catch (e) {
-            console.error("Transaction failed:", e);
-            yield prisma.challenge.update({
-                where: { id },
-                data: {
-                    Remaingpeople: {
-                        push: user.id,
-                    },
-                    Payoutpeople: {
-                        set: challengee.Payoutpeople.slice(1),
-                    },
-                },
-            });
+            prisma.$transaction((prisma) => __awaiter(void 0, void 0, void 0, function* () {
+                yield prisma.payoutPerson.delete({
+                    where: {
+                        userId: user.id,
+                        challengeId: challengee.id
+                    }
+                });
+                yield prisma.remainingPerson.create({
+                    data: {
+                        userId: user.id,
+                        challengeId: challengee.id
+                    }
+                });
+            }));
         }
     }
     return res.status(200).json({ message: "contest Ended Successfully" });
@@ -437,9 +461,14 @@ router.post("/challenge/acceptchallenge", (req, res) => __awaiter(void 0, void 0
     if (!user) {
         return res.json({ message: "No user find" });
     }
-    if (!chaalengeid) {
+    if (!challenge) {
         res.json({ message: "No challenge found for pricular that particular id" });
         return;
+    }
+    for (let i = 0; i < (challenge === null || challenge === void 0 ? void 0 : challenge.members.length); i++) {
+        if (challenge.members[i] == user.id) {
+            return res.status(400).json("User alredy exist in tournament");
+        }
     }
     if (!(challenge === null || challenge === void 0 ? void 0 : challenge.Request[username])) {
         res.json({ message: "You were not added to the Challenge Kindly ask the user to add you to challenge" });
@@ -472,20 +501,26 @@ router.post("/challenge/acceptchallenge", (req, res) => __awaiter(void 0, void 0
 }));
 function sendtrasaction(privatekey, publicKey, Amount) {
     return __awaiter(this, void 0, void 0, function* () {
-        const decodedKey = bs58_1.default.decode(privatekey);
-        const keypair = web3_js_1.Keypair.fromSecretKey(decodedKey);
-        console.log("chekad");
-        const transaction = new web3_js_1.Transaction().add(web3_js_1.SystemProgram.transfer({
-            fromPubkey: keypair.publicKey,
-            toPubkey: new web3_js_1.PublicKey(publicKey),
-            lamports: Amount * web3_js_1.LAMPORTS_PER_SOL
-        }));
-        const send = yield connection.sendTransaction(transaction, [keypair]);
-        console.log(send);
-        return send;
+        try {
+            const decodedKey = bs58_1.default.decode(privatekey);
+            const keypair = web3_js_1.Keypair.fromSecretKey(decodedKey);
+            console.log("chekad");
+            const transaction = new web3_js_1.Transaction().add(web3_js_1.SystemProgram.transfer({
+                fromPubkey: keypair.publicKey,
+                toPubkey: new web3_js_1.PublicKey(publicKey),
+                lamports: Math.floor(Amount)
+            }));
+            const send = yield connection.sendTransaction(transaction, [keypair]);
+            console.log(send);
+            return true;
+        }
+        catch (e) {
+            console.log(e);
+            return false;
+        }
     });
 }
-function revertback(privatekey, publicKey) {
+function revertback(privatekey, publicKey, amount) {
     return __awaiter(this, void 0, void 0, function* () {
         const decodedKey = bs58_1.default.decode(privatekey);
         console.log(decodedKey);
@@ -494,7 +529,7 @@ function revertback(privatekey, publicKey) {
         const transaction = new web3_js_1.Transaction().add(web3_js_1.SystemProgram.transfer({
             fromPubkey: secretkey.publicKey,
             toPubkey: new web3_js_1.PublicKey(publicKey),
-            lamports: web3_js_1.LAMPORTS_PER_SOL
+            lamports: Math.floor(web3_js_1.LAMPORTS_PER_SOL * amount)
         }));
         const sendtransaction = yield (0, web3_js_1.sendAndConfirmTransaction)(connection, transaction, [secretkey]);
         return sendtransaction;

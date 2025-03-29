@@ -20,76 +20,78 @@ app.get("/test",async(req:any,res:any)=>{
     console.log(trydd.data);
     return res.json({sol:trydd.data.solana.usd});
 })
-async function Gettime() {
-    const enddatespublic = await prisma.challenge.findMany({ 
-    });    
-    const arrayof = enddatespublic.map(en => en.enddate);
-    for (const enddate of arrayof) {
-        const date = new Date(enddate);
-        date.setDate(date.getDate()+1);
-        const day = date.getDate();
-        const month = date.getMonth() + 1; 
-        const year = date.getFullYear();
-        const cronSchedule = `0 0 ${day} ${month} *`;
-      cron.schedule(cronSchedule,async () => {
-            console.log(`Running cron job for end date: ${enddate}`);
-             enddatespublic.map(async(member)=>{
-                 const publicmember=member.members;
-                 publicmember.map(async(user)=>{
-                    const userd=await prisma.user.findUnique({
-                        where:{
-                            id:user
-                        },include:{
-                            step:true
-                        }
-                    })    
-                    const startdate=new Date(member.startdate);
-                    const enddate=new Date(member.enddate);
-                     let usercheck=true;  
-                    for (let currentDate = startdate; currentDate <= enddate; currentDate.setDate(currentDate.getDate() + 1)) {
-                        if(userd==null){
-                            return;
-                        }
-                        const stepForCurrentDay = userd.step.find(step => {
-                            const stepDate = new Date(step.day);
-                            return (
-                                stepDate.getFullYear() === currentDate.getFullYear() &&
-                                stepDate.getMonth() === currentDate.getMonth() &&
-                                stepDate.getDate() === currentDate.getDate()
-                            );
-                        }) 
-                        if(stepForCurrentDay){
-                            if(parseInt(stepForCurrentDay.steps)>member.Dailystep){
-                                  usercheck=false;   
-                                  break;       
-                            }
-                        }
-                    }
-                   if(usercheck){
-                     await prisma.challenge.update({
-                        where:{
-                            id:member.id
-                        },data:{
-                            Payoutpeople:{
-                                push:userd?.id
-                            }
-                        }
-                     })
-                   } 
-                   usercheck=true;
-                 }) 
-                 try{ 
-                    await axios.post("https://decentrailzed-ttrack-3yr8.vercel.app/challenge/finish",{id:member.id})   } 
-                    catch(e){
-                      console.log(e);
-                    }
-             })
+// async function Gettime() {
+//     const enddatespublic = await prisma.challenge.findMany({ 
+//     });    
+//     const arrayof = enddatespublic.map(en => en.enddate);
+//     for (const enddate of arrayof) {
+//         const date = new Date(enddate);
+//         date.setDate(date.getDate()+1);
+//         const day = date.getDate();
+//         const month = date.getMonth() + 1; 
+//         const year = date.getFullYear();
+//         const cronSchedule = `0 0 ${day} ${month} *`;
+//       cron.schedule(cronSchedule,async () => {
+//             console.log(`Running cron job for end date: ${enddate}`);
+//              enddatespublic.map(async(member)=>{
+//                  const publicmember=member.members;
+//                  publicmember.map(async(user)=>{
+//                     const userd=await prisma.user.findUnique({
+//                         where:{
+//                             id:user
+//                         },include:{
+//                             step:true
+//                         }
+//                     })    
+//                     const startdate=new Date(member.startdate);
+//                     const enddate=new Date(member.enddate);
+//                      let usercheck=true;  
+//                     for (let currentDate = startdate; currentDate <= enddate; currentDate.setDate(currentDate.getDate() + 1)) {
+//                         if(userd==null){
+//                             return;
+//                         }
+//                         const stepForCurrentDay = userd.step.find(step => {
+//                             const stepDate = new Date(step.day);
+//                             return (
+//                                 stepDate.getFullYear() === currentDate.getFullYear() &&
+//                                 stepDate.getMonth() === currentDate.getMonth() &&
+//                                 stepDate.getDate() === currentDate.getDate()
+//                             );
+//                         }) 
+//                         if(stepForCurrentDay){
+//                             if(parseInt(stepForCurrentDay.steps)>member.Dailystep){
+//                                   usercheck=false;   
+//                                   break;       
+//                             }
+//                         }
+//                     }
+//                    if(usercheck){
+//                      await prisma.challenge.update({
+//                         where:{
+//                             id:member.id
+//                         },data:{
+//                             Payoutpeople:{
+//                             set:{
+//                                 userId:userd?.id
+//                             }
+//                             }
+//                         }
+//                      })
+//                    } 
+//                    usercheck=true;
+//                  }) 
+//                  try{ 
+//                     await axios.post("https://decentrailzed-ttrack-3yr8.vercel.app/challenge/finish",{id:member.id})   } 
+//                     catch(e){
+//                       console.log(e);
+//                     }
+//              })
          
-        });
-        console.log("check");
-    }
-}
-Gettime();    
+//         });
+//         console.log("check");
+//     }
+// }
+// Gettime();    
 const port=3000;
 app.listen(port,()=>{
     console.log(`Server is listening at ${port}`);
