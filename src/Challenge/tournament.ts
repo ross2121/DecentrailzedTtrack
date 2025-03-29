@@ -69,7 +69,55 @@ router.get("/challenge/public",async(req:any,res:any)=>{
     })
     return res.status(200).json({allchalange});
 })
-
+router.post("/step/verification",async(req:any,res:any)=>{
+    const {startdate,enddate,userid,challengeid}=req.body;
+    if(!startdate || !enddate||!userid||!challengeid){
+        return res.status(440).json("Required fields ")
+    }
+    const user=await prisma.steps.findMany({
+        where:{
+            userid:userid,
+            
+        }
+    })
+    const challeng=await prisma.challenge.findUnique({
+        where:{
+            id:challengeid
+        }
+    })
+    if(!challeng){
+        return res.status(400).json({message:"No challenge found for that particular id"})
+    }
+   const Stepmap:any={};
+   user.map((users)=>{
+    Stepmap[users.day]=parseInt(users.steps);   
+   }) 
+ console.log(Stepmap);
+ let date=new Date(startdate);
+  let confirm=true;
+  let i=0
+while(i<challeng.days){
+    console.log(Stepmap[date.toISOString().split('T')[0]]);
+    if(Stepmap[date.toISOString().split('T')[0]]<challeng.Dailystep){
+         confirm=false;
+         console.log("check");
+         break;
+    }  
+    date.setDate(date.getDate() + 1);
+   i++;
+}
+if(confirm){
+    console.log(confirm);
+    await prisma.payoutPerson.create({
+        data:{
+            userId:userid,
+            challengeId:challeng.id
+        }
+    })
+    return res.status(200).json({message:"USer successfully completed to the contest"})
+}
+return res.json({message:"User  fail to complete the test"})
+})
 router.get("/challenge/private/:userid",async(req:any,res:any)=>{
     const userid=req.params.userid;
     console.log(userid);
@@ -352,12 +400,12 @@ router.post("/challenge/finish", async (req: any, res: any) => {
         }
     }
 );
-
     if (!challengee) {
         return res.status(400).json({ message: "No challenge found" });
     }
-    const equalamount = Number(challengee.Totalamount / challengee.members.length)*LAMPORTS_PER_SOL;
+    const equalamount = Number(challengee.Totalamount / challengee.members.length);
     console.log(equalamount);
+    console.log("length",challengee.Payoutpeople.length);
     for(let i=0;i<challengee.Payoutpeople.length;i++){
        const user=await prisma.user.findUnique({
         where:{
@@ -372,8 +420,10 @@ router.post("/challenge/finish", async (req: any, res: any) => {
         console.log(i);
        await prisma.payoutPerson.delete({
         where:{
+            challengeId_userId:{
             challengeId:challengee.id,
             userId:user.id
+        }
         }
        })
         if(transaction){
@@ -394,11 +444,14 @@ router.post("/challenge/finish", async (req: any, res: any) => {
         });
     }
        }catch(e){
+        console.log(e);
         prisma.$transaction(async(prisma)=>{
           await prisma.payoutPerson.delete({
             where:{
+                challengeId_userId:{
                 userId:user.id,
                 challengeId:challengee.id
+            }
             }
           })
           await prisma.remainingPerson.create({
@@ -511,7 +564,7 @@ async function sendtrasaction(privatekey:string,publicKey:string,Amount:number){
     const transaction=new  Transaction().add(SystemProgram.transfer({
        fromPubkey:keypair.publicKey,
        toPubkey:new PublicKey(publicKey),
-       lamports:Math.floor(Amount)
+       lamports:Math.floor(LAMPORTS_PER_SOL*Amount)
     }))
     const send=await connection.sendTransaction(transaction,[keypair]);
     console.log(send);

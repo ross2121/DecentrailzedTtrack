@@ -18,6 +18,7 @@ const cors_1 = __importDefault(require("cors"));
 const tournament_1 = require("./Challenge/tournament");
 const friend_1 = require("./Auth/friend");
 const client_1 = require("@prisma/client");
+const node_cron_1 = __importDefault(require("node-cron"));
 const axios_1 = __importDefault(require("axios"));
 const prisma = new client_1.PrismaClient();
 const app = (0, express_1.default)();
@@ -31,77 +32,90 @@ app.get("/test", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log(trydd.data);
     return res.json({ sol: trydd.data.solana.usd });
 }));
-// async function Gettime() {
-//     const enddatespublic = await prisma.challenge.findMany({ 
-//     });    
-//     const arrayof = enddatespublic.map(en => en.enddate);
-//     for (const enddate of arrayof) {
-//         const date = new Date(enddate);
-//         date.setDate(date.getDate()+1);
-//         const day = date.getDate();
-//         const month = date.getMonth() + 1; 
-//         const year = date.getFullYear();
-//         const cronSchedule = `0 0 ${day} ${month} *`;
-//       cron.schedule(cronSchedule,async () => {
-//             console.log(`Running cron job for end date: ${enddate}`);
-//              enddatespublic.map(async(member)=>{
-//                  const publicmember=member.members;
-//                  publicmember.map(async(user)=>{
-//                     const userd=await prisma.user.findUnique({
-//                         where:{
-//                             id:user
-//                         },include:{
-//                             step:true
-//                         }
-//                     })    
-//                     const startdate=new Date(member.startdate);
-//                     const enddate=new Date(member.enddate);
-//                      let usercheck=true;  
-//                     for (let currentDate = startdate; currentDate <= enddate; currentDate.setDate(currentDate.getDate() + 1)) {
-//                         if(userd==null){
-//                             return;
-//                         }
-//                         const stepForCurrentDay = userd.step.find(step => {
-//                             const stepDate = new Date(step.day);
-//                             return (
-//                                 stepDate.getFullYear() === currentDate.getFullYear() &&
-//                                 stepDate.getMonth() === currentDate.getMonth() &&
-//                                 stepDate.getDate() === currentDate.getDate()
-//                             );
-//                         }) 
-//                         if(stepForCurrentDay){
-//                             if(parseInt(stepForCurrentDay.steps)>member.Dailystep){
-//                                   usercheck=false;   
-//                                   break;       
-//                             }
-//                         }
-//                     }
-//                    if(usercheck){
-//                      await prisma.challenge.update({
-//                         where:{
-//                             id:member.id
-//                         },data:{
-//                             Payoutpeople:{
-//                             set:{
-//                                 userId:userd?.id
-//                             }
-//                             }
-//                         }
-//                      })
-//                    } 
-//                    usercheck=true;
-//                  }) 
-//                  try{ 
-//                     await axios.post("https://decentrailzed-ttrack-3yr8.vercel.app/challenge/finish",{id:member.id})   } 
-//                     catch(e){
-//                       console.log(e);
-//                     }
-//              })
-//         });
-//         console.log("check");
-//     }
-// }
-// Gettime();    
+function Gettime() {
+    return __awaiter(this, void 0, void 0, function* () {
+        console.log("checekdsds");
+        const cronSchedule = `*/1 * * * *`;
+        node_cron_1.default.schedule(cronSchedule, () => __awaiter(this, void 0, void 0, function* () {
+            const enddatespublic = yield prisma.challenge.findMany({});
+            console.log("chek1");
+            for (const member of enddatespublic) {
+                console.log(member.PayoutStatus);
+                console.log(member);
+                if (member.PayoutStatus == "payoutsucess" || member.PayoutStatus == "completed") {
+                    console.log("checke1");
+                    continue;
+                }
+                const date = new Date(member.enddate);
+                date.setDate(date.getDate());
+                date.setHours(0, 0, 0, 0);
+                if (member.status === "CurrentlyRunning" && new Date(member.enddate) < date) {
+                    yield prisma.challenge.update({
+                        where: {
+                            id: member.id,
+                        },
+                        data: {
+                            status: "Completed",
+                        },
+                    });
+                }
+                try {
+                    if (member.status === "Completed") {
+                        if (member.PayoutStatus === "pending") {
+                            const publicmember = member.members;
+                            for (const user of publicmember) {
+                                const response = yield axios_1.default.post("http://localhost:3000/api/v1/step/verification", {
+                                    startdate: member.startdate,
+                                    enddate: member.enddate,
+                                    userid: user,
+                                    challengeid: member.id,
+                                });
+                                console.log(response.data);
+                            }
+                            const response = yield axios_1.default.post("http://localhost:3000/api/v1/challenge/finish", { id: member.id });
+                            console.log(response.data);
+                            const payoutmap = yield prisma.payoutPerson.findMany({
+                                where: {
+                                    challengeId: member.id,
+                                },
+                            });
+                            const remainig = yield prisma.remainingPerson.findMany({
+                                where: {
+                                    challengeId: member.id,
+                                },
+                            });
+                            if (payoutmap.length === 0 && remainig.length === 0) {
+                                yield prisma.challenge.update({
+                                    where: {
+                                        id: member.id,
+                                    },
+                                    data: {
+                                        PayoutStatus: "completed",
+                                    },
+                                });
+                            }
+                            else {
+                                yield prisma.challenge.update({
+                                    where: {
+                                        id: member.id,
+                                    },
+                                    data: {
+                                        PayoutStatus: "payoutsucess",
+                                    },
+                                });
+                            }
+                            //    break;
+                        }
+                    }
+                }
+                catch (e) {
+                    console.log(e);
+                }
+            }
+        }));
+    });
+}
+Gettime();
 const port = 3000;
 app.listen(port, () => {
     console.log(`Server is listening at ${port}`);

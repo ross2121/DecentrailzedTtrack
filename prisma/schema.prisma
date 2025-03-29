@@ -55,15 +55,17 @@ model Challenge{
 model PayoutPerson {
   id          String   @id @default(uuid())
   challengeId String
-  userId      String   @unique
+  userId      String  
   Challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+    @@unique([challengeId, userId])
 }
 
 model RemainingPerson {
   id          String   @id @default(uuid())
-  challengeId String
-  userId      String   @unique
+  challengeId String   
+  userId      String   
   Challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+    @@unique([challengeId, userId])
 }
 model Steps{
   id  String @id  @default(uuid())
@@ -78,8 +80,8 @@ enum Challengetype{
 }
 enum Status{
   pending
-  accepted
-  rejected
+  payoutsucess
+  completed
 }
 enum Completed{
   CurrentlyRunning

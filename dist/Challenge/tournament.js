@@ -82,6 +82,54 @@ router.get("/challenge/public", (req, res) => __awaiter(void 0, void 0, void 0, 
     const allchalange = yield prisma.challenge.findMany({});
     return res.status(200).json({ allchalange });
 }));
+router.post("/step/verification", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { startdate, enddate, userid, challengeid } = req.body;
+    if (!startdate || !enddate || !userid || !challengeid) {
+        return res.status(440).json("Required fields ");
+    }
+    const user = yield prisma.steps.findMany({
+        where: {
+            userid: userid,
+        }
+    });
+    const challeng = yield prisma.challenge.findUnique({
+        where: {
+            id: challengeid
+        }
+    });
+    if (!challeng) {
+        return res.status(400).json({ message: "No challenge found for that particular id" });
+    }
+    const Stepmap = {};
+    user.map((users) => {
+        Stepmap[users.day] = parseInt(users.steps);
+    });
+    console.log(Stepmap);
+    let date = new Date(startdate);
+    let confirm = true;
+    let i = 0;
+    while (i < challeng.days) {
+        console.log(Stepmap[date.toISOString().split('T')[0]]);
+        if (Stepmap[date.toISOString().split('T')[0]] < challeng.Dailystep) {
+            confirm = false;
+            console.log("check");
+            break;
+        }
+        date.setDate(date.getDate() + 1);
+        i++;
+    }
+    if (confirm) {
+        console.log(confirm);
+        yield prisma.payoutPerson.create({
+            data: {
+                userId: userid,
+                challengeId: challeng.id
+            }
+        });
+        return res.status(200).json({ message: "USer successfully completed to the contest" });
+    }
+    return res.json({ message: "User  fail to complete the test" });
+}));
 router.get("/challenge/private/:userid", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const userid = req.params.userid;
     console.log(userid);
@@ -356,8 +404,9 @@ router.post("/challenge/finish", (req, res) => __awaiter(void 0, void 0, void 0,
     if (!challengee) {
         return res.status(400).json({ message: "No challenge found" });
     }
-    const equalamount = Number(challengee.Totalamount / challengee.members.length) * web3_js_1.LAMPORTS_PER_SOL;
+    const equalamount = Number(challengee.Totalamount / challengee.members.length);
     console.log(equalamount);
+    console.log("length", challengee.Payoutpeople.length);
     for (let i = 0; i < challengee.Payoutpeople.length; i++) {
         const user = yield prisma.user.findUnique({
             where: {
@@ -372,8 +421,10 @@ router.post("/challenge/finish", (req, res) => __awaiter(void 0, void 0, void 0,
             console.log(i);
             yield prisma.payoutPerson.delete({
                 where: {
-                    challengeId: challengee.id,
-                    userId: user.id
+                    challengeId_userId: {
+                        challengeId: challengee.id,
+                        userId: user.id
+                    }
                 }
             });
             if (transaction) {
@@ -394,11 +445,14 @@ router.post("/challenge/finish", (req, res) => __awaiter(void 0, void 0, void 0,
             }
         }
         catch (e) {
+            console.log(e);
             prisma.$transaction((prisma) => __awaiter(void 0, void 0, void 0, function* () {
                 yield prisma.payoutPerson.delete({
                     where: {
-                        userId: user.id,
-                        challengeId: challengee.id
+                        challengeId_userId: {
+                            userId: user.id,
+                            challengeId: challengee.id
+                        }
                     }
                 });
                 yield prisma.remainingPerson.create({
@@ -508,7 +562,7 @@ function sendtrasaction(privatekey, publicKey, Amount) {
             const transaction = new web3_js_1.Transaction().add(web3_js_1.SystemProgram.transfer({
                 fromPubkey: keypair.publicKey,
                 toPubkey: new web3_js_1.PublicKey(publicKey),
-                lamports: Math.floor(Amount)
+                lamports: Math.floor(web3_js_1.LAMPORTS_PER_SOL * Amount)
             }));
             const send = yield connection.sendTransaction(transaction, [keypair]);
             console.log(send);
