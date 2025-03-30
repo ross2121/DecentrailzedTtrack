@@ -66,6 +66,9 @@ router.get("/challenge/user/:id",async(req:any,res:any)=>{
 })
 router.get("/challenge/public",async(req:any,res:any)=>{
     const allchalange=await prisma.challenge.findMany({
+        where:{
+            type:"public"
+        }
     })
     return res.status(200).json({allchalange});
 })
@@ -291,6 +294,7 @@ router.post("/challenge/join/public/:id",async(req:any,res:any)=>{
             id
         }
     })
+    
     if(!challenge){
         console.log("no chalelenn");
         return  res.json({message:"No Challenge found for that particular id"});
@@ -304,6 +308,23 @@ router.post("/challenge/join/public/:id",async(req:any,res:any)=>{
            publickey:decoded.signatures[0].publicKey.toBase58()
         }
     })
+    if(!user){
+        return res.status(400).json({message:"USer not found"});
+    }
+    if(challenge.type=="private"){
+        const users=await prisma.challenge.findFirst({
+            where:{
+                Request:{
+                     has:user.username
+                }
+            }
+        })
+        if(!users){
+            return res.status(440).json({message:"You are not invited"})
+        }
+         
+    }
+  
     for(let i=0;i<challenge.members.length;i++){
         if(challenge.members[i]==user?.id){
             return res.status(440).json({message:"User alredy exist"})  
@@ -312,7 +333,6 @@ router.post("/challenge/join/public/:id",async(req:any,res:any)=>{
     if(challenge?.members.length>=challenge?.memberqty){
         return res.status(440).json({message:"Challenge is full"});
     }
-   
     console.log("publickey",user?.publickey);
     if(!user){
         res.json({message:"No user found"});
@@ -336,7 +356,32 @@ router.post("/challenge/join/public/:id",async(req:any,res:any)=>{
         return res.status(500).json({message:"USer alredy added in the contest"});
     }
     try{
-        await recivetransaction(decrypted,decoded); 
+       const trans= await recivetransaction(decrypted,decoded); 
+       if(trans){
+        if(challenge.type=="private"){
+            const users=await prisma.challenge.findFirst({
+                where:{
+                    Request:{
+                         has:user.username
+                    }
+                }
+            })  
+            if(!users){
+                return null;
+            }
+            const updatedRequest = challenge.Request.filter((usert: string) => usert !==user.username );
+            await prisma.challenge.update({
+                where:{
+                    id:users.id
+                },data:{
+                    Request:{
+                        set:updatedRequest
+                    }
+                }
+            }) 
+        }
+       
+       }
 
     }
     catch(e){
