@@ -26,7 +26,7 @@ router.post("/register", (req, res) => __awaiter(void 0, void 0, void 0, functio
     const { username, name, email, password } = req.body;
     const verify = type_1.UserSchema.safeParse({ username, name, email, password });
     if (!verify.success) {
-        return res.status(400).json({ message: verify.error.message, });
+        return res.status(400).json({ message: verify.error.errors, });
     }
     const unique = yield prisma.user.findUnique({
         where: {
@@ -78,7 +78,7 @@ router.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function*
     const { email, password } = req.body;
     const verify = type_1.LoginSchema.safeParse({ email, password });
     if (!verify.success) {
-        return res.status(400).json({ message: verify.error.message, });
+        return res.status(400).json({ error: verify.error.errors });
     }
     const user = yield prisma.user.findUnique({
         where: {
@@ -86,12 +86,11 @@ router.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function*
         }
     });
     if (!user) {
-        res.status(200).json({ message: "No user find kindly register", status: 400 });
-        return;
+        return res.status(400).json({ message: "No user find kindly register", status: 400 });
     }
     const comparepassword = bcrypt_1.default.compareSync(password, user === null || user === void 0 ? void 0 : user.password);
     if (!comparepassword) {
-        res.json({ message: "Password dont match" });
+        return res.status(440).json({ error: "Password dont match" });
     }
     const token = jsonwebtoken_1.default.sign({ id: user.id }, "JWTOKEN");
     return res.status(200).json({ token, user });

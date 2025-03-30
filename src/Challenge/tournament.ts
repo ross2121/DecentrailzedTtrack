@@ -253,7 +253,7 @@ router.get("/participated/:userid",async(req:any,res:any)=>{
    return res.status(200).json({message:user})
 })
 router.post("/send/wallet",async(req:any,res:any)=>{
-    const {tx}=req.body;
+    try{ const {tx}=req.body;
     const transaction=Transaction.from(tx.data);
     console.log(transaction);
     const user=await prisma.user.findFirst({
@@ -274,8 +274,7 @@ router.post("/send/wallet",async(req:any,res:any)=>{
     const decipher = crypto.createDecipheriv(algorithm, key,iv);
     let decrypted = decipher.update(user.privatekey, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
-    console.log(decrypted)
-    try{
+    console.log(decrypted);
         await recivetransaction(decrypted,transaction);
         return res.status(200).json({message:"Transaction Successfull"});
     }
@@ -283,11 +282,11 @@ router.post("/send/wallet",async(req:any,res:any)=>{
         console.log("failed");
         return res.status(400).json({message:"Transaction failed",e});
     }
-    return res.status(200).json({message:"Transaction Successfull"});
+   
 
 })
 router.post("/challenge/join/public/:id",async(req:any,res:any)=>{
-    const id=req.params.id;
+   const id=req.params.id;
     console.log("id",id);
     const challenge=await prisma.challenge.findUnique({
         where:{
@@ -308,7 +307,9 @@ router.post("/challenge/join/public/:id",async(req:any,res:any)=>{
            publickey:decoded.signatures[0].publicKey.toBase58()
         }
     })
+    console.log(user);
     if(!user){
+        console.log("no user");
         return res.status(400).json({message:"USer not found"});
     }
     if(challenge.type=="private"){
@@ -321,16 +322,18 @@ router.post("/challenge/join/public/:id",async(req:any,res:any)=>{
         })
         if(!users){
             return res.status(440).json({message:"You are not invited"})
-        }
-         
+        }    
     }
-  
+    console.log("check11");
     for(let i=0;i<challenge.members.length;i++){
         if(challenge.members[i]==user?.id){
+            console.log("check13");
             return res.status(440).json({message:"User alredy exist"})  
         }
     }
+    console.log("check14");
     if(challenge?.members.length>=challenge?.memberqty){
+       console.log("check15");
         return res.status(440).json({message:"Challenge is full"});
     }
     console.log("publickey",user?.publickey);
@@ -390,7 +393,6 @@ router.post("/challenge/join/public/:id",async(req:any,res:any)=>{
     }
     try{
         await prisma.$transaction(async(prisma)=>{
-        
     let ch:boolean=false;
      for(let i=0;i<challenge?.members.length;i++){
         if(challenge.members[i]==user.id){
@@ -704,6 +706,7 @@ async function revertback(privatekey:string,publicKey:string,amount:number){
      return sendtransaction;
 }
 async function recivetransaction(privatekey:string,decoded:Transaction){
+
     const privateKeyArray = privatekey.split(',').map(num => parseInt(num, 10));
     const uintprivat=new Uint8Array(privateKeyArray);
     const secretkey=Keypair.fromSecretKey(uintprivat);

@@ -315,7 +315,9 @@ router.post("/challenge/join/public/:id", (req, res) => __awaiter(void 0, void 0
             publickey: decoded.signatures[0].publicKey.toBase58()
         }
     });
+    console.log(user);
     if (!user) {
+        console.log("no user");
         return res.status(400).json({ message: "USer not found" });
     }
     if (challenge.type == "private") {
@@ -330,12 +332,16 @@ router.post("/challenge/join/public/:id", (req, res) => __awaiter(void 0, void 0
             return res.status(440).json({ message: "You are not invited" });
         }
     }
+    console.log("check11");
     for (let i = 0; i < challenge.members.length; i++) {
         if (challenge.members[i] == (user === null || user === void 0 ? void 0 : user.id)) {
+            console.log("check13");
             return res.status(440).json({ message: "User alredy exist" });
         }
     }
+    console.log("check14");
     if ((challenge === null || challenge === void 0 ? void 0 : challenge.members.length) >= (challenge === null || challenge === void 0 ? void 0 : challenge.memberqty)) {
+        console.log("check15");
         return res.status(440).json({ message: "Challenge is full" });
     }
     console.log("publickey", user === null || user === void 0 ? void 0 : user.publickey);

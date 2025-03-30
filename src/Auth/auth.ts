@@ -62,7 +62,7 @@ router.post("/signin",async(req:any,res:any)=>{
     const {email,password}=req.body;
     const verify=LoginSchema.safeParse({email,password});
     if(!verify.success){
-        return res.status(400).json({message:verify.error.errors,});
+        return res.status(400).json({error:verify.error.errors});
     }
     const user=await prisma.user.findUnique({
         where:{
@@ -70,12 +70,12 @@ router.post("/signin",async(req:any,res:any)=>{
         }
     })
     if(!user){
-        res.status(200).json({message:"No user find kindly register",status:400});
-        return;
+        return res.status(400).json({message:"No user find kindly register",status:400});
+        
     }
     const comparepassword=bcrypt.compareSync(password,user?.password);
     if(!comparepassword){
-       res.json({message:"Password dont match"});
+       return res.status(440).json({error:"Password dont match"});
     }
     const token=jwt.sign({id:user.id},"JWTOKEN");
     return res.status(200).json({token,user});

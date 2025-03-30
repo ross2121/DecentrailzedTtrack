@@ -202,6 +202,18 @@ router.post("/accept/friend",async(req:any,res:any)=>{
         })
         await prisma.user.update({
             where:{
+                id:userid
+            },data:{
+                Friends:{
+                    push:username
+                },
+                RequestFriend:{
+                    set:user.Request.filter(el=>el!==username)
+                }
+            }
+        })
+        await prisma.user.update({
+            where:{
                username:username
             },data:{
                RequestFriend:{
@@ -223,4 +235,5 @@ router.post("/accept/friend",async(req:any,res:any)=>{
         return res.status(200).json({message:"User removed from you list"});
     }
 })
+
 export const Friend=router;
