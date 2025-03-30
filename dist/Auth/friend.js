@@ -206,6 +206,18 @@ router.post("/accept/friend", (req, res) => __awaiter(void 0, void 0, void 0, fu
         });
         yield prisma.user.update({
             where: {
+                id: userid
+            }, data: {
+                Friends: {
+                    push: username
+                },
+                RequestFriend: {
+                    set: user.Request.filter(el => el !== username)
+                }
+            }
+        });
+        yield prisma.user.update({
+            where: {
                 username: username
             }, data: {
                 RequestFriend: {

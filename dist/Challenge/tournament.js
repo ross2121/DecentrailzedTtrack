@@ -263,37 +263,41 @@ router.get("/participated/:userid", (req, res) => __awaiter(void 0, void 0, void
     return res.status(200).json({ message: user });
 }));
 router.post("/send/wallet", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { tx } = req.body;
-    const transaction = web3_js_1.Transaction.from(tx.data);
-    console.log(transaction);
-    const user = yield prisma.user.findFirst({
-        where: {
-            publickey: transaction.signatures[0].publicKey.toBase58()
-        }
-    });
-    console.log("check1");
-    console.log("publickey", user === null || user === void 0 ? void 0 : user.publickey);
-    if (!user) {
-        res.json({ message: "No user found" });
-        console.log("no user found");
-        return;
-    }
-    // const bufferfrom=Buffer.from(user.iv,'hex')
-    // @ts-ignore
-    const iv = Buffer.from(user.iv, 'hex');
-    const decipher = crypto_1.default.createDecipheriv(algorithm, key, iv);
-    let decrypted = decipher.update(user.privatekey, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
-    console.log(decrypted);
     try {
-        yield recivetransaction(decrypted, transaction);
-        return res.status(200).json({ message: "Transaction Successfull" });
+        const { tx } = req.body;
+        const transaction = web3_js_1.Transaction.from(tx.data);
+        console.log(transaction);
+        const user = yield prisma.user.findFirst({
+            where: {
+                publickey: transaction.signatures[0].publicKey.toBase58()
+            }
+        });
+        console.log("check1");
+        console.log("publickey", user === null || user === void 0 ? void 0 : user.publickey);
+        if (!user) {
+            res.json({ message: "No user found" });
+            console.log("no user found");
+            return;
+        }
+        // const bufferfrom=Buffer.from(user.iv,'hex')
+        // @ts-ignore
+        const iv = Buffer.from(user.iv, 'hex');
+        const decipher = crypto_1.default.createDecipheriv(algorithm, key, iv);
+        let decrypted = decipher.update(user.privatekey, 'hex', 'utf8');
+        decrypted += decipher.final('utf8');
+        console.log(decrypted);
+        const trax = yield recivetransaction(decrypted, transaction);
+        if (trax) {
+            return res.status(200).json({ message: "Transaction Successfull" });
+        }
+        else {
+            return res.status(440).json({ message: "Transaction Failed" });
+        }
     }
     catch (e) {
         console.log("failed");
         return res.status(400).json({ message: "Transaction failed", e });
     }
-    return res.status(200).json({ message: "Transaction Successfull" });
 }));
 router.post("/challenge/join/public/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const id = req.params.id;
@@ -395,7 +399,7 @@ router.post("/challenge/join/public/:id", (req, res) => __awaiter(void 0, void 0
     }
     catch (e) {
         console.log("failed");
-        return res.json({ message: "Transaction failed", e });
+        return res.status(440).json({ message: "Transaction failed", e });
     }
     try {
         yield prisma.$transaction((prisma) => __awaiter(void 0, void 0, void 0, function* () {
@@ -709,12 +713,18 @@ function revertback(privatekey, publicKey, amount) {
 }
 function recivetransaction(privatekey, decoded) {
     return __awaiter(this, void 0, void 0, function* () {
-        const privateKeyArray = privatekey.split(',').map(num => parseInt(num, 10));
-        const uintprivat = new Uint8Array(privateKeyArray);
-        const secretkey = web3_js_1.Keypair.fromSecretKey(uintprivat);
-        const sendtrasaction = yield (0, web3_js_1.sendAndConfirmTransaction)(connection, decoded, [secretkey]);
-        console.log(sendtrasaction);
-        return sendtrasaction;
+        try {
+            const privateKeyArray = privatekey.split(',').map(num => parseInt(num, 10));
+            const uintprivat = new Uint8Array(privateKeyArray);
+            const secretkey = web3_js_1.Keypair.fromSecretKey(uintprivat);
+            const sendtrasaction = yield (0, web3_js_1.sendAndConfirmTransaction)(connection, decoded, [secretkey]);
+            console.log(sendtrasaction);
+            return true;
+        }
+        catch (e) {
+            console.log(e);
+            return false;
+        }
     });
 }
 exports.challenges = router;

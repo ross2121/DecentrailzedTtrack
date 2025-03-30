@@ -275,8 +275,12 @@ router.post("/send/wallet",async(req:any,res:any)=>{
     let decrypted = decipher.update(user.privatekey, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
     console.log(decrypted);
-        await recivetransaction(decrypted,transaction);
-        return res.status(200).json({message:"Transaction Successfull"});
+        const trax=await recivetransaction(decrypted,transaction);
+        if(trax){
+            return res.status(200).json({message:"Transaction Successfull"});
+        }else{
+        return res.status(440).json({message:"Transaction Failed"});
+    }
     }
     catch(e){
         console.log("failed");
@@ -382,14 +386,12 @@ router.post("/challenge/join/public/:id",async(req:any,res:any)=>{
                     }
                 }
             }) 
-        }
-       
-       }
-
+        } 
+    }
     }
     catch(e){
         console.log("failed");
-        return res.json({message:"Transaction failed",e});
+        return res.status(440).json({message:"Transaction failed",e});
     }
     try{
         await prisma.$transaction(async(prisma)=>{
@@ -706,13 +708,17 @@ async function revertback(privatekey:string,publicKey:string,amount:number){
      return sendtransaction;
 }
 async function recivetransaction(privatekey:string,decoded:Transaction){
-
+    try{
     const privateKeyArray = privatekey.split(',').map(num => parseInt(num, 10));
     const uintprivat=new Uint8Array(privateKeyArray);
     const secretkey=Keypair.fromSecretKey(uintprivat);
     const sendtrasaction=await sendAndConfirmTransaction(connection,decoded,[secretkey]);
     console.log(sendtrasaction);
-    return sendtrasaction;
+    return true;}
+    catch(e){
+        console.log(e)
+        return false;
+    }
 }
 export const challenges=router;
 
