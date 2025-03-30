@@ -99,7 +99,77 @@ router.post("/test/step",async(req:any,res:any)=>{
     }) 
    return res.json({message:"send succesfully"});
 })
+router.post("/step/analysis", async (req: any, res: any) => {
+    try {
+        const { id } = req.body;
+        if (!id) {
+            return res.status(400).json({ message: "User ID is required" });
+        }
+        const userTimezone = req.body.timezone || 'UTC';
 
+        const today = new Date();
+        const lastWeek = new Date(today);
+        lastWeek.setDate(today.getDate() - 6);
+        const formatDateToStorageFormat = (date: Date) => {
+            return date.toISOString().split('T')[0]; 
+            
+        };
+        const stepData = await prisma.steps.findMany({
+            where: {
+                userid: id,
+                day: {
+                    gte: formatDateToStorageFormat(lastWeek),
+                    lte: formatDateToStorageFormat(today)
+                }
+            },
+            orderBy: {
+                day: 'asc'
+            }
+        });
+        const stepsMap = new Map();
+        stepData.forEach(entry => {
+            const dateKey = typeof entry.day === 'string' ? 
+                entry.day.split('T')[0] : 
+                new Date(entry.day).toISOString().split('T')[0];
+            stepsMap.set(dateKey, entry.steps);
+        });
+
+        // Generate complete 7-day response
+        const completeStepData = [];
+        const currentDate = new Date(lastWeek);
+        
+        while (currentDate <= today) {
+            const dateStr = formatDateToStorageFormat(currentDate);
+            const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+            
+            completeStepData.push({
+                date: dateStr,
+                day: dayNames[currentDate.getDay()],
+                steps: stepsMap.get(dateStr) || 0, // Default to 0 if no entry
+                // Include other relevant fields from your schema
+            });
+
+            currentDate.setDate(currentDate.getDate() + 1);
+        }
+
+        res.status(200).json({
+            message: "Step analysis completed successfully",
+            analysisPeriod: {
+                start: formatDateToStorageFormat(lastWeek),
+                end: formatDateToStorageFormat(today),
+                days: completeStepData.length
+            },
+            data: completeStepData
+        });
+
+    } catch (error:any) {
+        console.error("Step analysis error:", error);
+        res.status(500).json({ 
+            message: "Internal server error",
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
+    }
+});
 router.post("/accept/friend",async(req:any,res:any)=>{
     const  {userid,username,bool}=req.body;
     if(!userid||!username){
