@@ -11,7 +11,7 @@ router.post("/register",async(req,res:any)=>{
     const {username,name,email,password}=req.body;
     const verify=UserSchema.safeParse({username,name,email,password});
     if(!verify.success){
-        return res.status(400).json({message:verify.error.message,});
+        return res.status(400).json({message:verify.error.errors,});
     }
     const unique=await prisma.user.findUnique({
         where:{
@@ -62,7 +62,7 @@ router.post("/signin",async(req:any,res:any)=>{
     const {email,password}=req.body;
     const verify=LoginSchema.safeParse({email,password});
     if(!verify.success){
-        return res.status(400).json({message:verify.error.message,});
+        return res.status(400).json({message:verify.error.errors,});
     }
     const user=await prisma.user.findUnique({
         where:{
