@@ -22,7 +22,7 @@ app.get("/test",async(req:any,res:any)=>{
 })
 async function Gettime() {
     console.log("checekdsds");
-    const cronSchedule = `*/1 * * * *`; 
+    const cronSchedule = `0 0 * * *`; 
     cron.schedule(cronSchedule, async () => {
         const enddatespublic = await prisma.challenge.findMany({});
           console.log("chek1");

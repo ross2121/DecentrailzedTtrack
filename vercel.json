@@ -8,10 +8,10 @@
       }
     ],
     "crons": [
-    {
-      "path": "/api/every-minute",
-      "schedule": "* * * * *"
-    }
+      {
+        "path": "/api/every-day",
+        "schedule": "0 0 * * *"
+      }
   ],
     "public": true,
      "buildCommand": "npm run build",

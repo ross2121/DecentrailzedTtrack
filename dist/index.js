@@ -35,7 +35,7 @@ app.get("/test", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 function Gettime() {
     return __awaiter(this, void 0, void 0, function* () {
         console.log("checekdsds");
-        const cronSchedule = `*/1 * * * *`;
+        const cronSchedule = `0 0 * * *`;
         node_cron_1.default.schedule(cronSchedule, () => __awaiter(this, void 0, void 0, function* () {
             const enddatespublic = yield prisma.challenge.findMany({});
             console.log("chek1");
