@@ -79,7 +79,11 @@ router.get("/challenge/user/:id", (req, res) => __awaiter(void 0, void 0, void 0
     return res.status(200).json({ challenge });
 }));
 router.get("/challenge/public", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const allchalange = yield prisma.challenge.findMany({});
+    const allchalange = yield prisma.challenge.findMany({
+        where: {
+            type: "public"
+        }
+    });
     return res.status(200).json({ allchalange });
 }));
 router.post("/step/verification", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -311,6 +315,21 @@ router.post("/challenge/join/public/:id", (req, res) => __awaiter(void 0, void 0
             publickey: decoded.signatures[0].publicKey.toBase58()
         }
     });
+    if (!user) {
+        return res.status(400).json({ message: "USer not found" });
+    }
+    if (challenge.type == "private") {
+        const users = yield prisma.challenge.findFirst({
+            where: {
+                Request: {
+                    has: user.username
+                }
+            }
+        });
+        if (!users) {
+            return res.status(440).json({ message: "You are not invited" });
+        }
+    }
     for (let i = 0; i < challenge.members.length; i++) {
         if (challenge.members[i] == (user === null || user === void 0 ? void 0 : user.id)) {
             return res.status(440).json({ message: "User alredy exist" });
@@ -342,7 +361,31 @@ router.post("/challenge/join/public/:id", (req, res) => __awaiter(void 0, void 0
         return res.status(500).json({ message: "USer alredy added in the contest" });
     }
     try {
-        yield recivetransaction(decrypted, decoded);
+        const trans = yield recivetransaction(decrypted, decoded);
+        if (trans) {
+            if (challenge.type == "private") {
+                const users = yield prisma.challenge.findFirst({
+                    where: {
+                        Request: {
+                            has: user.username
+                        }
+                    }
+                });
+                if (!users) {
+                    return null;
+                }
+                const updatedRequest = challenge.Request.filter((usert) => usert !== user.username);
+                yield prisma.challenge.update({
+                    where: {
+                        id: users.id
+                    }, data: {
+                        Request: {
+                            set: updatedRequest
+                        }
+                    }
+                });
+            }
+        }
     }
     catch (e) {
         console.log("failed");
