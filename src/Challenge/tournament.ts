@@ -119,9 +119,8 @@ if(confirm){
 return res.json({message:"User  fail to complete the test"})
 })
 
-router.get("/challenge/private/:userid",async(req:any,res:any)=>{
-    const userid=req.params.userid;
-    console.log(userid);
+router.get("/challenge/private/:username",async(req:any,res:any)=>{
+    const userid=req.params.username;
     const allchalange=await prisma.challenge.findMany({
         where:{
             Request:{
@@ -281,6 +280,8 @@ router.post("/send/wallet",async(req:any,res:any)=>{
         console.log("failed");
         return res.status(400).json({message:"Transaction failed",e});
     }
+    return res.status(200).json({message:"Transaction Successfull"});
+
 })
 router.post("/challenge/join/public/:id",async(req:any,res:any)=>{
     const id=req.params.id;

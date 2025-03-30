@@ -130,9 +130,8 @@ router.post("/step/verification", (req, res) => __awaiter(void 0, void 0, void 0
     }
     return res.json({ message: "User  fail to complete the test" });
 }));
-router.get("/challenge/private/:userid", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const userid = req.params.userid;
-    console.log(userid);
+router.get("/challenge/private/:username", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const userid = req.params.username;
     const allchalange = yield prisma.challenge.findMany({
         where: {
             Request: {
@@ -290,6 +289,7 @@ router.post("/send/wallet", (req, res) => __awaiter(void 0, void 0, void 0, func
         console.log("failed");
         return res.status(400).json({ message: "Transaction failed", e });
     }
+    return res.status(200).json({ message: "Transaction Successfull" });
 }));
 router.post("/challenge/join/public/:id", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const id = req.params.id;
