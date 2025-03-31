@@ -38,9 +38,9 @@ To set up and run the backend locally, follow these steps:
     npm start
     ```
 
-## Contributing
+## FRONTEND REPO
 
-Contributions are welcome! Please open an issue or submit a pull request for any improvements or bug fixes.
+[Steps Decentralized React Expo](https://github.com/ross2121/Steps-decemtralized-react-Expo)
 
 ## License
 
