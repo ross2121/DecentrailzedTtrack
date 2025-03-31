@@ -202,20 +202,11 @@ router.post("/accept/friend",async(req:any,res:any)=>{
         })
         await prisma.user.update({
             where:{
-                id:userid
+               username:username
             },data:{
                 Friends:{
                     push:username
                 },
-                RequestFriend:{
-                    set:user.Request.filter(el=>el!==username)
-                }
-            }
-        })
-        await prisma.user.update({
-            where:{
-               username:username
-            },data:{
                RequestFriend:{
                 set:user.RequestFriend.filter(el=>el!==users.username)
                }
