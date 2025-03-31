@@ -1,47 +1,45 @@
-# Decentralized Solana Betting App Backend
+# 🎰 DECENTRALIZED SOLANA BETTING APP BACKEND 🎰
 
-This repository contains the backend implementation for a decentralized betting application built on the Solana blockchain. The backend is responsible for managing user interactions, processing bets, and ensuring seamless communication with the Solana blockchain.
+![Solana](https://img.shields.io/badge/Solana-3E4A8D?style=for-the-badge&logo=solana&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
+![Web3](https://img.shields.io/badge/Web3-F16822?style=for-the-badge&logo=web3.js&logoColor=white)
+![MIT License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
-## Features
+> **A high-performance backend for decentralized betting on Solana blockchain**
 
-- **Decentralized Architecture**: Leverages Solana's blockchain to ensure transparency and immutability of betting transactions.
-- **User Management**: Handles user authentication and wallet integration.
-- **Bet Processing**: Manages the lifecycle of bets, including creation, validation, and settlement.
-- **Blockchain Interaction**: Facilitates communication with the Solana blockchain for transaction execution and data retrieval.
-- **Cron Job Functionality**: Automates periodic tasks to ensure smooth operation of the betting platform.
+## ✨ FEATURES ✨
 
-## Cron Job Functionality
+### 🏗️ DECENTRALIZED ARCHITECTURE
+![Blockchain](https://img.shields.io/badge/Blockchain-Transparent-blue)
+- Immutable betting transactions on Solana
+- Smart contract-based logic
+- Transparent and verifiable results
 
-The backend includes a cron job system that performs the following tasks:
+### 👥 USER MANAGEMENT
+![Authentication](https://img.shields.io/badge/Auth-Wallet_Integrated-blue)
+- Secure wallet authentication
+- Non-custodial user accounts
+- Role-based access control
 
-1. **Bet Settlement**: Automatically checks for bets that have reached their conclusion and processes the results.
-2. **Payout Distribution**: Ensures timely distribution of winnings to the respective users' wallets.
-3. **Data Cleanup**: Removes expired or invalid bets from the system to maintain database efficiency.
-4. **Blockchain Sync**: Periodically syncs with the Solana blockchain to fetch the latest state and ensure data consistency.
-5. **Notification Dispatch**: Sends reminders or updates to users about their bets or platform activities.
+### 💰 BET PROCESSING
+![Betting](https://img.shields.io/badge/Bets-Secure-green)
+- End-to-end bet lifecycle management
+- Real-time validation
+- Automated settlement
 
-## Getting Started
+### ⛓️ BLOCKCHAIN INTERACTION
+![Solana](https://img.shields.io/badge/Solana-RPC_Integrated-purple)
+- Seamless transaction execution
+- On-chain data retrieval
+- Event listening
 
-To set up and run the backend locally, follow these steps:
-
-1. Clone the repository:
-    ```
-    git clone https://github.com/your-repo/decentralized-solana-betting-backend.git
-    ```
-2. Install dependencies:
-    ```
-    npm install
-    ```
-3. Configure environment variables in a `.env` file.
-4. Start the server:
-    ```
-    npm start
-    ```
-
-## Contributing
-
-Contributions are welcome! Please open an issue or submit a pull request for any improvements or bug fixes.
-
-## License
-
-This project is licensed under the MIT License. See the `LICENSE` file for details.
+### ⏰ CRON JOB FUNCTIONALITY
+![Automation](https://img.shields.io/badge/Automated-Scheduled-orange)
+```mermaid
+graph TD
+    A[Start] --> B[Check Pending Bets]
+    B --> C{Time Expired?}
+    C -->|Yes| D[Process Settlement]
+    C -->|No| B
+    D --> E[Distribute Winnings]
+    E --> F[Update Blockchain]
