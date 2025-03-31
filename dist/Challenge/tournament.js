@@ -288,14 +288,17 @@ router.post("/send/wallet", (req, res) => __awaiter(void 0, void 0, void 0, func
         console.log(decrypted);
         const trax = yield recivetransaction(decrypted, transaction);
         if (trax) {
+            console.log("check2");
             return res.status(200).json({ message: "Transaction Successfull" });
         }
         else {
+            console.log("check33");
             return res.status(440).json({ message: "Transaction Failed" });
         }
     }
     catch (e) {
         console.log("failed");
+        console.log("check33");
         return res.status(400).json({ message: "Transaction failed", e });
     }
 }));

@@ -234,7 +234,6 @@ router.get("/challenge/:userid",async(req:any,res:any)=>{
        return res.status(400).json({message:"No user found"});
     }
     return res.status(200).json({message:user?.challenge});
-    
 
 })
 router.get("/participated/:userid",async(req:any,res:any)=>{
@@ -277,13 +276,16 @@ router.post("/send/wallet",async(req:any,res:any)=>{
     console.log(decrypted);
         const trax=await recivetransaction(decrypted,transaction);
         if(trax){
+            console.log("check2");
             return res.status(200).json({message:"Transaction Successfull"});
         }else{
+            console.log("check33");
         return res.status(440).json({message:"Transaction Failed"});
     }
     }
     catch(e){
         console.log("failed");
+        console.log("check33");
         return res.status(400).json({message:"Transaction failed",e});
     }
    
