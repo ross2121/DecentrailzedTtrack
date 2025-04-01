@@ -12,6 +12,16 @@ router.post("/add/friend",async(req:any,res:any)=>{
         id:userid
     }
    })
+   const findfriend=requestuser?.Friends.find((user)=>user==username);
+   console.log(findfriend);
+   if(findfriend){
+    return res.status(440).json({message:"User is alredy added to your list"});
+   }
+  const requested=requestuser?.RequestFriend.find((user)=>user===username);
+  console.log(requested);
+  if(requested){
+    return res.status(440).json({message:"User alredy requested"});
+  }
    if(!requestuser){
     return res.status(500).json({message:"No user found for this particular id"})
    }
@@ -105,7 +115,7 @@ router.post("/step/analysis", async (req: any, res: any) => {
         if (!id) {
             return res.status(400).json({ message: "User ID is required" });
         }
-        const userTimezone = req.body.timezone || 'UTC';
+        // const userTimezone = req.body.timezone || 'UTC';
 
         const today = new Date();
         const lastWeek = new Date(today);
@@ -133,8 +143,6 @@ router.post("/step/analysis", async (req: any, res: any) => {
                 new Date(entry.day).toISOString().split('T')[0];
             stepsMap.set(dateKey, entry.steps);
         });
-
-        // Generate complete 7-day response
         const completeStepData = [];
         const currentDate = new Date(lastWeek);
         
@@ -145,8 +153,7 @@ router.post("/step/analysis", async (req: any, res: any) => {
             completeStepData.push({
                 date: dateStr,
                 day: dayNames[currentDate.getDay()],
-                steps: stepsMap.get(dateStr) || 0, // Default to 0 if no entry
-                // Include other relevant fields from your schema
+                steps: stepsMap.get(dateStr) || 0,
             });
 
             currentDate.setDate(currentDate.getDate() + 1);
@@ -183,10 +190,16 @@ router.post("/accept/friend",async(req:any,res:any)=>{
     if(!user){
         return res.status(440).json({message:"No user found for that particular id"});
     }
-    const friend=user?.Request.map((frin)=>frin==username);
+    const friend=user?.Request.find((frin)=>frin===username);
     if(!friend){
-        return res.status(400).json({message:"No user found for that paricular id"});
+        return res.status(400).json({message:"No friend request for that particular id"});
     }
+    const findfriend=user.Friends.find((user)=>user===username);
+   
+    if(findfriend){
+        return res.status(440).json({message:"The user is already added to your list"});
+    }
+    
     if(bool){
         const users=await prisma.user.update({
             where:{
@@ -205,7 +218,7 @@ router.post("/accept/friend",async(req:any,res:any)=>{
                username:username
             },data:{
                 Friends:{
-                    push:username
+                    push:users.username
                 },
                RequestFriend:{
                 set:user.RequestFriend.filter(el=>el!==users.username)

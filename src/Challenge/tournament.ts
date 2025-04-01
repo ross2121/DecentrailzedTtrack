@@ -595,8 +595,9 @@ router.post("/challenge/private",async(req:any,res:any)=>{
         }
     })
     if(!user){
-        res.json({message:"No user found for paticular id"});
+       return res.status(440).json({message:"No user found for paticular id"});
     }
+    const updatedRequest = [user.username, ...(request || [])];
    await prisma.challenge.create({
     data:{
         userid:userid,
@@ -609,13 +610,64 @@ router.post("/challenge/private",async(req:any,res:any)=>{
         type:"private",
         members:[],
         name,
-        Request:request,
+        Request:updatedRequest,
         PayoutStatus:"pending",
         startdate,
-            enddate
+         enddate
     }
    })  
+
    return  res.json({message:"Challenge created succefull"});   
+})
+router.get("/challenge/info/:id",async(req:any,res:any)=>{
+    const id=req.params.id;
+    if(!id){
+        return res.status(400).json({message:"No user found"});
+    }
+    const challenge=await prisma.challenge.findUnique({
+        where:{
+            id:id
+        }
+    })
+    if(!challenge){
+        return res.status(400).json({message:"No challenge found for particular id"})
+    }
+    const startdate=challenge.startdate
+    const enddate=challenge.enddate;
+    const today = new Date().toISOString().split('T')[0];
+    const effective=today>enddate?enddate:today
+    const result:any=[]
+    for(let i=0;i<challenge.members.length;i++){
+        const user=challenge.members[i];
+        const step=await prisma.steps.findMany({
+            where:{
+                userid:user,
+                day:{
+                    gte:startdate,
+                    lte:effective
+                }
+            
+            },
+            select:{
+                day:true,
+                steps:true    
+            }
+        })
+        const users=await prisma.user.findUnique({
+            where:{
+                id:user
+            }
+        })
+        step.forEach((step)=>{
+            result.push({
+                username:users?.username,
+                steps:step.steps,
+                day:step.day
+            })
+        })
+    }
+    return res.status(200).json({result})
+
 })
 router.post("/challenge/acceptchallenge",async(req:any,res:any)=>{
     const {chaalengeid,userid,username,tx}=req.body;

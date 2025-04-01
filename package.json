@@ -41,6 +41,7 @@
     "@types/cors": "^2.8.17",
     "@types/node-cron": "^3.0.11",
     "@types/websocket": "^1.0.10",
-    "@types/ws": "^8.18.0"
+    "@types/ws": "^8.18.0",
+    "typescript": "^5.8.2"
   }
 }
