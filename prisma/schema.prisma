@@ -38,7 +38,7 @@ model Challenge{
   members  String[]
   userid    String
   Dailystep  Int
-  Amount    Int
+  Amount     Int
   Totalamount  Int
   Digital_Currency String
   days   Int

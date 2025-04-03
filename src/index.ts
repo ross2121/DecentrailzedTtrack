@@ -20,6 +20,9 @@ app.get("/test",async(req:any,res:any)=>{
     console.log(trydd.data);
     return res.json({sol:trydd.data.solana.usd});
 })
+app.get("/tes",async(req:any,res:any)=>{
+    return res.json({message:"helloo"});
+})
 async function Gettime() {
     console.log("checekdsds");
     const cronSchedule = `0 0 * * *`; 

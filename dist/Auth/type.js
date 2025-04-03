@@ -4,9 +4,9 @@ exports.LoginSchema = exports.UserSchema = exports.challenge = void 0;
 const zod_1 = require("zod");
 exports.challenge = zod_1.z.object({
     name: zod_1.z.string().min(1, "Name is required"),
-    memberqty: zod_1.z.number().int().positive("Member quantity must be a positive integer"),
-    Dailystep: zod_1.z.number().int().positive("Daily step count must be a positive integer"),
-    Amount: zod_1.z.number().positive("Amount must be a positive number"),
+    memberqty: zod_1.z.number().int().positive("Member quantity must be a positive integer").gt(0, "Daily step count must be greater than 0"),
+    Dailystep: zod_1.z.number().int().positive("Daily step count must be a positive integer").gt(0, "Daily step count must be greater than 0"),
+    Amount: zod_1.z.number().positive("Amount must be a positive number").gt(0, "Amount must be greater than 0"),
     Digital_Currency: zod_1.z.string().min(1, "Digital currency is required"),
     days: zod_1.z.number().int().positive("Days must be a positive integer"),
     // userid: z.string(),

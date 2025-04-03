@@ -34,7 +34,7 @@ router.post("/register", (req, res) => __awaiter(void 0, void 0, void 0, functio
         }
     });
     if (unique) {
-        return res.status(400).json({ message: "User alredy register" });
+        return res.status(400).json({ message: [{ message: "User alredy exist Kindly Login" }] });
     }
     const uniqueusername = yield prisma.user.findUnique({
         where: {
@@ -42,7 +42,7 @@ router.post("/register", (req, res) => __awaiter(void 0, void 0, void 0, functio
         }
     });
     if (uniqueusername) {
-        return res.status(400).json({ message: "Username alredy taken" });
+        return res.status(400).json({ message: [{ message: "Username alredy exist.Kindly change it" }] });
     }
     const keypair = web3_js_1.Keypair.generate();
     const algorithm = 'aes-256-cbc';

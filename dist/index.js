@@ -32,6 +32,9 @@ app.get("/test", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log(trydd.data);
     return res.json({ sol: trydd.data.solana.usd });
 }));
+app.get("/tes", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    return res.json({ message: "helloo" });
+}));
 function Gettime() {
     return __awaiter(this, void 0, void 0, function* () {
         console.log("checekdsds");
