@@ -32,10 +32,31 @@ To set up and run the backend locally, follow these steps:
     ```
     npm install
     ```
-3. Configure environment variables in a `.env` file.
-4. Start the server:
+3. Build the project:
+    ```
+    npm run build
+    ```
+4. Configure environment variables in a `.env` file.
+    ```
+    DATABASE_URL=""
+    PRIVATE_KEY=""
+    ```
+5. Start the server:
     ```
     npm start
+    ```
+
+### Using Docker
+
+Alternatively, you can use Docker to build and run the project:
+
+1. Build the Docker image:
+    ```
+    docker build -t decentralized-betting-backend .
+    ```
+2. Run the Docker container:
+    ```
+    docker run -p 3000:3000 --env-file .env decentralized-betting-backend
     ```
 
 ## FRONTEND REPO
