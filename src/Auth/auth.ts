@@ -70,12 +70,12 @@ router.post("/signin",async(req:any,res:any)=>{
         }
     })
     if(!user){
-        return res.status(400).json({message:"No user find kindly register",status:400});
+        return res.status(400).json({message:[{message:"NO user found kindly register"}]});
         
     }
     const comparepassword=bcrypt.compareSync(password,user?.password);
     if(!comparepassword){
-       return res.status(440).json({error:"Password dont match"});
+        return res.status(400).json({message:[{message:"PASSWORD IS INCORRECT"}]});
     }
     const token=jwt.sign({id:user.id},"JWTOKEN");
     return res.status(200).json({token,user});

@@ -21,7 +21,7 @@ app.get("/test",async(req:any,res:any)=>{
     return res.json({sol:trydd.data.solana.usd});
 })
 app.get("/tes",async(req:any,res:any)=>{
-    return res.json({message:"helloo"});
+    return res.json({message:"youval"});
 })
 async function Gettime() {
     console.log("checekdsds");

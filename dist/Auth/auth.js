@@ -86,11 +86,11 @@ router.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function*
         }
     });
     if (!user) {
-        return res.status(400).json({ message: "No user find kindly register", status: 400 });
+        return res.status(400).json({ message: [{ message: "NO user found kindly register" }] });
     }
     const comparepassword = bcrypt_1.default.compareSync(password, user === null || user === void 0 ? void 0 : user.password);
     if (!comparepassword) {
-        return res.status(440).json({ error: "Password dont match" });
+        return res.status(400).json({ message: [{ message: "PASSWORD IS INCORRECT" }] });
     }
     const token = jsonwebtoken_1.default.sign({ id: user.id }, "JWTOKEN");
     return res.status(200).json({ token, user });
