@@ -41,6 +41,7 @@ router.post("/create/challenge", (req, res) => __awaiter(void 0, void 0, void 0,
                 memberqty,
                 Dailystep,
                 Totalamount: 0,
+                types: "Steps",
                 Amount,
                 Digital_Currency,
                 days,
@@ -104,11 +105,13 @@ router.post("/step/verification", (req, res) => __awaiter(void 0, void 0, void 0
     let date = new Date(startdate);
     let confirm = true;
     let i = 0;
+    if (challeng.Dailystep == null) {
+        return;
+    }
     while (i < challeng.days) {
         console.log(Stepmap[date.toISOString().split('T')[0]]);
         if (Stepmap[date.toISOString().split('T')[0]] < challeng.Dailystep) {
             confirm = false;
-            console.log("check");
             break;
         }
         date.setDate(date.getDate() + 1);
@@ -628,6 +631,7 @@ router.post("/challenge/private", (req, res) => __awaiter(void 0, void 0, void 0
                 memberqty,
                 Totalamount: 0,
                 type: "private",
+                types: "Steps",
                 members: [],
                 name,
                 Request: updatedRequest,

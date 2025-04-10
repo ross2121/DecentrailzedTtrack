@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.sleeprouter = void 0;
 const express_1 = require("express");
 const client_1 = require("@prisma/client");
+const type_1 = require("../Auth/type");
 const router = (0, express_1.Router)();
 const prisma = new client_1.PrismaClient();
 router.post("/regular/update/sleep", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
@@ -59,4 +60,98 @@ router.post("/regular/update/sleep", (req, res) => __awaiter(void 0, void 0, voi
     }
     return res.status(200).json({ message: "Successfully updated the user" });
 }));
+router.post("/create/challenge/sleep", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { name, memberqty, Hours, Amount, Digital_Currency, days, userid, startdate, enddate } = req.body;
+    const verify = type_1.sleepchallenge.safeParse({ name, memberqty, Hours, Amount, Digital_Currency, days });
+    if (!verify.success) {
+        return res.status(400).json({ error: verify.error.errors });
+    }
+    try {
+        const challenge = yield prisma.challenge.create({
+            data: {
+                name,
+                members: [],
+                memberqty,
+                Hours,
+                Totalamount: 0,
+                types: "Sleep",
+                Amount,
+                Digital_Currency,
+                days,
+                userid,
+                PayoutStatus: "pending",
+                startdate,
+                enddate,
+                // Request:[]
+            }
+        });
+        return res.status(201).json({ message: "Challenge Created Successfully", challenge });
+    }
+    catch (error) {
+        console.log(error);
+        return res.status(500).json({ message: "Error creating Challenge", error });
+    }
+}));
+router.post("/sleep/verification", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { startdate, enddate, userid, challengeid } = req.body;
+    if (!startdate || !enddate || !userid || !challengeid) {
+        return res.status(440).json("Required fields ");
+    }
+    const user = yield prisma.sleep.findMany({
+        where: {
+            userid: userid,
+        }
+    });
+    const challeng = yield prisma.challenge.findUnique({
+        where: {
+            id: challengeid
+        }
+    });
+    if (!challeng) {
+        return res.status(400).json({ message: "No challenge found for that particular id" });
+    }
+    const Sleepmap = {};
+    user.map((users) => {
+        console.log(users);
+        Sleepmap[users.day] = users.Hours;
+    });
+    console.log(Sleepmap);
+    let date = new Date(startdate);
+    let confirm = true;
+    let i = 0;
+    if (challeng.Hours == null) {
+        return res.status(400).json({ message: "Error" });
+    }
+    const challengehour = parseDuration(challeng.Hours);
+    while (i < challeng.days) {
+        console.log(Sleepmap[date.toISOString().split('T')[0]]);
+        const dayhour = parseDuration(Sleepmap[date.toISOString().split('T')[0]]);
+        if (dayhour < challengehour) {
+            confirm = false;
+            break;
+        }
+        console.log(dayhour);
+        console.log(challengehour);
+        date.setDate(date.getDate() + 1);
+        i++;
+    }
+    if (confirm) {
+        console.log(confirm);
+        yield prisma.payoutPerson.create({
+            data: {
+                userId: userid,
+                challengeId: challeng.id
+            }
+        });
+        return res.status(200).json({ message: "USer successfully completed to the contest" });
+    }
+    return res.json({ message: "User  fail to complete the test" });
+}));
+function parseDuration(duration) {
+    const hoursMatch = duration.match(/(\d+)h/);
+    const minutesMatch = duration.match(/(\d+)m/);
+    const hours = hoursMatch ? parseInt(hoursMatch[1], 10) : 0;
+    const minutes = minutesMatch ? parseInt(minutesMatch[1], 10) : 0;
+    return hours * 60 + minutes;
+}
 exports.sleeprouter = router;

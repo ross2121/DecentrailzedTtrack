@@ -28,6 +28,7 @@ router.post("/create/challenge",async(req:any,res:any)=>{
             memberqty,
             Dailystep,
             Totalamount:0,
+            types:"Steps",
             Amount,
             Digital_Currency,
             days,
@@ -91,11 +92,14 @@ router.post("/step/verification",async(req:any,res:any)=>{
  let date=new Date(startdate);
   let confirm=true;
   let i=0
+  if(challeng.Dailystep==null){
+    return;
+  }
 while(i<challeng.days){
     console.log(Stepmap[date.toISOString().split('T')[0]]);
+    
     if(Stepmap[date.toISOString().split('T')[0]]<challeng.Dailystep){
          confirm=false;
-         console.log("check");
          break;
     }  
     date.setDate(date.getDate() + 1);
@@ -447,7 +451,6 @@ router.get("/total/steps", async (req: any, res: any) => {
     const offset = 5.5 * 60 * 60 * 1000;
     const istTime = new Date(now.getTime() + offset);
     const todayStr = istTime.toISOString().split('T')[0];
-    
     const users = await prisma.user.findMany({
         include: {
             step: {
@@ -625,6 +628,7 @@ router.post("/challenge/private",async(req:any,res:any)=>{
         memberqty,
         Totalamount:0,
         type:"private",
+        types:"Steps",
         members:[],
         name,
         Request:updatedRequest,

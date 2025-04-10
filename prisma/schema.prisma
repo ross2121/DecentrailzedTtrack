@@ -38,9 +38,10 @@ model Challenge{
   memberqty Int
   members  String[]
   userid    String
-  Dailystep  Int
+  Dailystep  Int?
   Amount     Int
   Totalamount  Int
+  types     CommpetionType
   Digital_Currency String
   days   Int
   type    Challengetype @default(public) 
@@ -49,7 +50,7 @@ model Challenge{
   enddate    String
   status     Completed @default(CurrentlyRunning)
   Request   String[]
- 
+  Hours       String?
   PayoutStatus Status @default(pending)
   Payoutpeople PayoutPerson[] 
   Remaingpeople RemainingPerson[] 
@@ -96,5 +97,9 @@ enum Status{
 enum Completed{
   CurrentlyRunning
   Completed
+}
+enum CommpetionType{
+  Steps
+  Sleep
 }
  
