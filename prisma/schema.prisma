@@ -23,6 +23,7 @@ model User{
   privatekey String
   iv         String?
   Friends     String[]
+   Sleep     Sleep[]
   Request      String[]
   RequestFriend String[]
   challenge Challenge[]
@@ -48,6 +49,7 @@ model Challenge{
   enddate    String
   status     Completed @default(CurrentlyRunning)
   Request   String[]
+ 
   PayoutStatus Status @default(pending)
   Payoutpeople PayoutPerson[] 
   Remaingpeople RemainingPerson[] 
@@ -73,6 +75,14 @@ model Steps{
   day   String
   userid String
   user   User @relation(references: [id],fields: [userid])
+}
+model Sleep{
+  id String @id @default(uuid())
+   Hours String
+   day   String
+   userid  String
+   user User @relation(references: [id],fields: [userid])
+
 }
 enum Challengetype{
   public

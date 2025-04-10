@@ -6,6 +6,7 @@ import { Friend } from "./Auth/friend";
 import { PrismaClient } from "@prisma/client";
 import cron from "node-cron"
 import axios from "axios";
+import { sleeprouter } from "./Challenge/sleep";
 
 const prisma=new PrismaClient();
 const app=express();
@@ -14,6 +15,7 @@ app.use(cors());
 
 app.use("/api/v1",userrouter);
 app.use("/api/v1",challenges);
+app.use("/api/v1",sleeprouter);
 app.use("/api/v1",Friend);
 app.get("/test",async(req:any,res:any)=>{
     const trydd=await axios.get("https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd");

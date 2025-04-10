@@ -284,7 +284,7 @@ router.post("/send/wallet",async(req:any,res:any)=>{
         if(trax){
             console.log("check2");
             return res.status(200).json({message:"Transaction Successfull"});
-        }else{
+        }else{  
             console.log("check33");
         return res.status(440).json({message:"Transaction Failed"});
     }

@@ -20,12 +20,14 @@ const friend_1 = require("./Auth/friend");
 const client_1 = require("@prisma/client");
 const node_cron_1 = __importDefault(require("node-cron"));
 const axios_1 = __importDefault(require("axios"));
+const sleep_1 = require("./Challenge/sleep");
 const prisma = new client_1.PrismaClient();
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
 app.use((0, cors_1.default)());
 app.use("/api/v1", auth_1.userrouter);
 app.use("/api/v1", tournament_1.challenges);
+app.use("/api/v1", sleep_1.sleeprouter);
 app.use("/api/v1", friend_1.Friend);
 app.get("/test", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const trydd = yield axios_1.default.get("https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd");
