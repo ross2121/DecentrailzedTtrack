@@ -99,14 +99,12 @@ router.post("/sleep/verification",async(req:any,res:any)=>{
     }
    const Sleepmap:any={};
    user.map((users)=>{
-    console.log(users);
-    Sleepmap[users.day]=users.Hours;   
+    Sleepmap[users.day]=users.Hours||"0h 0m"; 
    })   
  console.log(Sleepmap);
  let date=new Date(startdate);
   let confirm=true;
   let i=0
-  
   if(challeng.Hours==null){
     return res.status(400).json({message:"Error"});
   }
@@ -135,6 +133,26 @@ if(confirm){
 }
 return res.json({message:"User  fail to complete the test"})
 })
+router.get("/total/sleep", async (req: any, res: any) => {
+    const now = new Date();
+    const offset = 5.5 * 60 * 60 * 1000;
+    const istTime = new Date(now.getTime() + offset);
+    const todayStr = istTime.toISOString().split('T')[0];
+    const users = await prisma.user.findMany({
+        include: {
+            Sleep: {
+                where: {
+                    day: todayStr 
+                },
+            }, 
+        },
+    });
+    const formattedSteps = users.map(user => ({
+        username: user.username,
+        steps: user.Sleep[0]?.Hours || 0,
+    }));
+    return res.status(200).json({ data: formattedSteps });
+}); 
 function parseDuration(duration: string): number {
     const hoursMatch = duration.match(/(\d+)h/);
     const minutesMatch = duration.match(/(\d+)m/);

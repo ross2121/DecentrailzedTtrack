@@ -80,8 +80,8 @@ router.get("/challenge/public", (req, res) => __awaiter(void 0, void 0, void 0, 
     return res.status(200).json({ allchalange });
 }));
 router.post("/step/verification", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { startdate, enddate, userid, challengeid } = req.body;
-    if (!startdate || !enddate || !userid || !challengeid) {
+    const { userid, challengeid } = req.body;
+    if (!userid || !challengeid) {
         return res.status(440).json("Required fields ");
     }
     const user = yield prisma.steps.findMany({
@@ -102,15 +102,20 @@ router.post("/step/verification", (req, res) => __awaiter(void 0, void 0, void 0
         Stepmap[users.day] = parseInt(users.steps);
     });
     console.log(Stepmap);
-    let date = new Date(startdate);
+    let date = new Date(challeng.startdate);
     let confirm = true;
     let i = 0;
     if (challeng.Dailystep == null) {
-        return;
+        return res.status(400).json({ message: "Daily step not found" });
     }
+    console.log(i);
+    console.log(challeng.days);
     while (i < challeng.days) {
+        console.log("chee");
         console.log(Stepmap[date.toISOString().split('T')[0]]);
-        if (Stepmap[date.toISOString().split('T')[0]] < challeng.Dailystep) {
+        if (Stepmap[date.toISOString().split('T')[0]] < challeng.Dailystep || !Stepmap[date.toISOString().split('T')[0]]) {
+            console.log("check 3");
+            console.log(date.toISOString().split('T')[0]);
             confirm = false;
             break;
         }
@@ -523,6 +528,7 @@ router.post("/regular/update", (req, res) => __awaiter(void 0, void 0, void 0, f
     return res.status(200).json({ message: "Successfully updated the user" });
 }));
 router.post("/challenge/finish", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("check2");
     const { id } = req.body;
     const privatekey = process.env.PRIVATE_KEY;
     if (!privatekey) {

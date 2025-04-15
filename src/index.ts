@@ -27,22 +27,44 @@ app.get("/tes",async(req:any,res:any)=>{
 })
 async function Gettime() {
     console.log("checekdsds");
-    const cronSchedule = `0 0 * * *`; 
+    const cronSchedule = `* * * * *`; 
     cron.schedule(cronSchedule, async () => {
         const enddatespublic = await prisma.challenge.findMany({});
           console.log("chek1");
             for (const member of enddatespublic) {  
                 console.log(member.PayoutStatus)
                 console.log(member);
+                if(member.PayoutStatus=="payoutsucess"){
+                    const response = await axios.post("http://localhost:3000/api/v1/challenge/retry", { id: member.id });
+                    console.log(response.data);
+                    const challengeid=await prisma.remainingPerson.findMany({
+                        where:{
+                            challengeId:member.id
+                        }
+                    })
+                    if(challengeid.length==0){
+                        await prisma.challenge.update({
+                            where:{
+                                id:member.id
+                            },data:{
+                                PayoutStatus:"completed"
+                            }
+                        })
+                    }
+                }
                 if(member.PayoutStatus=="payoutsucess"||member.PayoutStatus=="completed"){
                     console.log("checke1");
                     continue;
                 } 
-                const date = new Date(member.enddate);
-              date.setDate(date.getDate());
-                date.setHours(0, 0, 0, 0);
-                if (member.status === "CurrentlyRunning" && new Date(member.enddate) < date) {
-                    await prisma.challenge.update({
+                const today = new Date();
+                today.setHours(0, 0, 0, 0); 
+
+                const endDate = new Date(member.enddate);
+                endDate.setHours(0, 0, 0, 0); 
+                let status;
+                if (member.status === "CurrentlyRunning" && endDate <today) {
+                     console.log("cheek5");
+                    status=await prisma.challenge.update({
                         where: {
                             id: member.id,
                         },
@@ -52,7 +74,7 @@ async function Gettime() {
                     });
                 }
                 try{
-                    if (member.status === "Completed") {
+                    if (member.status === "Completed"||endDate <today) {
                     if (member.PayoutStatus === "pending") {
                         const publicmember = member.members;
                         for (const user of publicmember) {
@@ -62,7 +84,7 @@ async function Gettime() {
                                     userid: user,
                                     challengeid: member.id,
                                 });
-                                console.log(response.data);
+                                console.log("data",response.data);
     
                         }
                             const response = await axios.post("http://localhost:3000/api/v1/challenge/finish", { id: member.id });
@@ -106,10 +128,11 @@ async function Gettime() {
                 console.log(e);
             }
             }
+
     });
 }
 
-Gettime();    
+Gettime(); 
 const port=3000;
 app.listen(port,()=>{
     console.log(`Server is listening at ${port}`);

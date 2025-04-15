@@ -41,7 +41,7 @@ model Challenge{
   Dailystep  Int?
   Amount     Int
   Totalamount  Int
-  types     CommpetionType
+  types     CommpetionType @default(Steps)
   Digital_Currency String
   days   Int
   type    Challengetype @default(public) 

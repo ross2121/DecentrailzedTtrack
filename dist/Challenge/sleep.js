@@ -112,8 +112,7 @@ router.post("/sleep/verification", (req, res) => __awaiter(void 0, void 0, void 
     }
     const Sleepmap = {};
     user.map((users) => {
-        console.log(users);
-        Sleepmap[users.day] = users.Hours;
+        Sleepmap[users.day] = users.Hours || "0h 0m";
     });
     console.log(Sleepmap);
     let date = new Date(startdate);
@@ -146,6 +145,29 @@ router.post("/sleep/verification", (req, res) => __awaiter(void 0, void 0, void 
         return res.status(200).json({ message: "USer successfully completed to the contest" });
     }
     return res.json({ message: "User  fail to complete the test" });
+}));
+router.get("/total/sleep", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const now = new Date();
+    const offset = 5.5 * 60 * 60 * 1000;
+    const istTime = new Date(now.getTime() + offset);
+    const todayStr = istTime.toISOString().split('T')[0];
+    const users = yield prisma.user.findMany({
+        include: {
+            Sleep: {
+                where: {
+                    day: todayStr
+                },
+            },
+        },
+    });
+    const formattedSteps = users.map(user => {
+        var _a;
+        return ({
+            username: user.username,
+            steps: ((_a = user.Sleep[0]) === null || _a === void 0 ? void 0 : _a.Hours) || 0,
+        });
+    });
+    return res.status(200).json({ data: formattedSteps });
 }));
 function parseDuration(duration) {
     const hoursMatch = duration.match(/(\d+)h/);

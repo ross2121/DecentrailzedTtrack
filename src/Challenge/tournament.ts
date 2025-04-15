@@ -66,8 +66,8 @@ router.get("/challenge/public",async(req:any,res:any)=>{
     return res.status(200).json({allchalange});
 })
 router.post("/step/verification",async(req:any,res:any)=>{
-    const {startdate,enddate,userid,challengeid}=req.body;
-    if(!startdate || !enddate||!userid||!challengeid){
+    const {userid,challengeid}=req.body;
+    if(!userid||!challengeid){
         return res.status(440).json("Required fields ")
     }
     const user=await prisma.steps.findMany({
@@ -89,16 +89,20 @@ router.post("/step/verification",async(req:any,res:any)=>{
     Stepmap[users.day]=parseInt(users.steps);   
    }) 
  console.log(Stepmap);
- let date=new Date(startdate);
+ let date=new Date(challeng.startdate);
   let confirm=true;
   let i=0
   if(challeng.Dailystep==null){
-    return;
+    return res.status(400).json({message:"Daily step not found"});
   }
+  console.log(i);
+  console.log(challeng.days);
 while(i<challeng.days){
+    console.log("chee");
     console.log(Stepmap[date.toISOString().split('T')[0]]);
-    
-    if(Stepmap[date.toISOString().split('T')[0]]<challeng.Dailystep){
+    if(Stepmap[date.toISOString().split('T')[0]]<challeng.Dailystep ||!Stepmap[date.toISOString().split('T')[0]]){
+        console.log("check 3");
+        console.log(date.toISOString().split('T')[0]);
          confirm=false;
          break;
     }  
@@ -226,7 +230,6 @@ router.post("/challenge/retry",async(req:any,res:any)=>{
     }
     
 })
- 
 router.get("/challenge/:userid",async(req:any,res:any)=>{
     const userid=req.params.userid;
     if(!userid){
@@ -460,7 +463,6 @@ router.get("/total/steps", async (req: any, res: any) => {
             },
         },
     });
-
     const formattedSteps = users.map(user => ({
         username: user.username,
         steps: user.step[0]?.steps || 0,
@@ -518,6 +520,7 @@ if (existing) {
 return res.status(200).json({ message: "Successfully updated the user" });
 })
 router.post("/challenge/finish", async (req: any, res: any) => {
+    console.log("check2");
     const { id } = req.body;
     const privatekey = process.env.PRIVATE_KEY;
     if (!privatekey) {
