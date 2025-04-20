@@ -17,11 +17,9 @@ const auth_1 = require("./Auth/auth");
 const cors_1 = __importDefault(require("cors"));
 const tournament_1 = require("./Challenge/tournament");
 const friend_1 = require("./Auth/friend");
-const client_1 = require("@prisma/client");
-const node_cron_1 = __importDefault(require("node-cron"));
 const axios_1 = __importDefault(require("axios"));
 const sleep_1 = require("./Challenge/sleep");
-const prisma = new client_1.PrismaClient();
+const Stake_1 = require("./Challenge/Stake");
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
 app.use((0, cors_1.default)());
@@ -29,119 +27,13 @@ app.use("/api/v1", auth_1.userrouter);
 app.use("/api/v1", tournament_1.challenges);
 app.use("/api/v1", sleep_1.sleeprouter);
 app.use("/api/v1", friend_1.Friend);
+app.use("/api/v1", Stake_1.stakerouter);
 app.get("/test", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const trydd = yield axios_1.default.get("https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd");
     console.log(trydd.data);
     return res.json({ sol: trydd.data.solana.usd });
 }));
-app.get("/tes", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    return res.json({ message: "youval" });
-}));
-function Gettime() {
-    return __awaiter(this, void 0, void 0, function* () {
-        console.log("checekdsds");
-        const cronSchedule = `* * * * *`;
-        node_cron_1.default.schedule(cronSchedule, () => __awaiter(this, void 0, void 0, function* () {
-            const enddatespublic = yield prisma.challenge.findMany({});
-            console.log("chek1");
-            for (const member of enddatespublic) {
-                console.log(member.PayoutStatus);
-                console.log(member);
-                if (member.PayoutStatus == "payoutsucess") {
-                    const response = yield axios_1.default.post("http://localhost:3000/api/v1/challenge/retry", { id: member.id });
-                    console.log(response.data);
-                    const challengeid = yield prisma.remainingPerson.findMany({
-                        where: {
-                            challengeId: member.id
-                        }
-                    });
-                    if (challengeid.length == 0) {
-                        yield prisma.challenge.update({
-                            where: {
-                                id: member.id
-                            }, data: {
-                                PayoutStatus: "completed"
-                            }
-                        });
-                    }
-                }
-                if (member.PayoutStatus == "payoutsucess" || member.PayoutStatus == "completed") {
-                    console.log("checke1");
-                    continue;
-                }
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                const endDate = new Date(member.enddate);
-                endDate.setHours(0, 0, 0, 0);
-                let status;
-                if (member.status === "CurrentlyRunning" && endDate < today) {
-                    console.log("cheek5");
-                    status = yield prisma.challenge.update({
-                        where: {
-                            id: member.id,
-                        },
-                        data: {
-                            status: "Completed",
-                        },
-                    });
-                }
-                try {
-                    if (member.status === "Completed" || endDate < today) {
-                        if (member.PayoutStatus === "pending") {
-                            const publicmember = member.members;
-                            for (const user of publicmember) {
-                                const response = yield axios_1.default.post("http://localhost:3000/api/v1/step/verification", {
-                                    startdate: member.startdate,
-                                    enddate: member.enddate,
-                                    userid: user,
-                                    challengeid: member.id,
-                                });
-                                console.log("data", response.data);
-                            }
-                            const response = yield axios_1.default.post("http://localhost:3000/api/v1/challenge/finish", { id: member.id });
-                            console.log(response.data);
-                            const payoutmap = yield prisma.payoutPerson.findMany({
-                                where: {
-                                    challengeId: member.id,
-                                },
-                            });
-                            const remainig = yield prisma.remainingPerson.findMany({
-                                where: {
-                                    challengeId: member.id,
-                                },
-                            });
-                            if (payoutmap.length === 0 && remainig.length === 0) {
-                                yield prisma.challenge.update({
-                                    where: {
-                                        id: member.id,
-                                    },
-                                    data: {
-                                        PayoutStatus: "completed",
-                                    },
-                                });
-                            }
-                            else {
-                                yield prisma.challenge.update({
-                                    where: {
-                                        id: member.id,
-                                    },
-                                    data: {
-                                        PayoutStatus: "payoutsucess",
-                                    },
-                                });
-                            }
-                            //    break;
-                        }
-                    }
-                }
-                catch (e) {
-                    console.log(e);
-                }
-            }
-        }));
-    });
-}
-Gettime();
+// Gettime();
 const port = 3000;
 app.listen(port, () => {
     console.log(`Server is listening at ${port}`);

@@ -12,94 +12,124 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-model User{
-  id   String @unique @id @default(uuid())
-  name String
-  email String @unique
-  step    Steps[]  
-  username String  @unique
-  password String
-  publickey String
-  privatekey String
-  iv         String?
-  Friends     String[]
-   Sleep     Sleep[]
-  Request      String[]
-  RequestFriend String[]
-  challenge Challenge[]
-  Notification String[]
-  Participated   String[]
+
+model User {
+  id                  String      @id @unique @default(uuid())
+  name                String
+  email               String      @unique
+  step                Steps[]
+  username            String      @unique
+  password            String
+  publickey           String
+  privatekey          String
+  iv                  String?
+  Friends             String[]
+  Sleep               Sleep[]
+  Request             String[]
+  RequestFriend       String[]
+  challenge           Challenge[]
+  Notification        String[]
+  Participated        String[]
   HistoryParticipated String[]
-  HistoryCreated   String[]
+  HistoryCreated      String[]
+  Stake               Stake?
 }
-model Challenge{
-  id String @unique @id @default(uuid())
-  name String
-  memberqty Int
-  members  String[]
-  userid    String
-  Dailystep  Int?
-  Amount     Int
-  Totalamount  Int
-  types     CommpetionType @default(Steps)
+
+model Challenge {
+  id               String            @id @unique @default(uuid())
+  name             String
+  memberqty        Int
+  members          String[]
+  userid           String
+  Dailystep        Int?
+  Amount           Int
+  Totalamount      Int
+  types            CommpetionType    @default(Steps)
   Digital_Currency String
-  days   Int
-  type    Challengetype @default(public) 
-  user   User @relation(fields: [userid],references: [id])
-  startdate   String
-  enddate    String
-  status     Completed @default(CurrentlyRunning)
-  Request   String[]
-  Hours       String?
-  PayoutStatus Status @default(pending)
-  Payoutpeople PayoutPerson[] 
-  Remaingpeople RemainingPerson[] 
+  days             Int
+  type             Challengetype     @default(public)
+  user             User              @relation(fields: [userid], references: [id])
+  startdate        String
+  enddate          String
+  status           Completed         @default(CurrentlyRunning)
+  Request          String[]
+  Hours            String?
+  PayoutStatus     Status            @default(pending)
+  Payoutpeople     PayoutPerson[]
+  Remaingpeople    RemainingPerson[]
 }
+
 model PayoutPerson {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   challengeId String
-  userId      String  
+  userId      String
   Challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
-    @@unique([challengeId, userId])
+
+  @@unique([challengeId, userId])
 }
 
 model RemainingPerson {
-  id          String   @id @default(uuid())
-  challengeId String   
-  userId      String   
+  id          String    @id @default(uuid())
+  challengeId String
+  userId      String
   Challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
-    @@unique([challengeId, userId])
-}
-model Steps{
-  id  String @id  @default(uuid())
-  steps String
-  day   String
-  userid String
-  user   User @relation(references: [id],fields: [userid])
-}
-model Sleep{
-  id String @id @default(uuid())
-   Hours String
-   day   String
-   userid  String
-   user User @relation(references: [id],fields: [userid])
 
+  @@unique([challengeId, userId])
 }
-enum Challengetype{
+
+model Steps {
+  id     String @id @default(uuid())
+  steps  String
+  day    String
+  userid String
+  user   User   @relation(references: [id], fields: [userid])
+}
+
+model Sleep {
+  id     String @id @default(uuid())
+  Hours  String
+  day    String
+  userid String
+  user   User   @relation(references: [id], fields: [userid])
+}
+
+model Stake {
+  id           String        @id @unique @default(uuid())
+  amount       Int
+  Days         Int
+  Hours        String
+  startdate    String
+  enddate      String
+  Userid       String        @unique
+  Status       Completed     @default(CurrentlyRunning)
+  User         User          @relation(references: [id], fields: [Userid])
+  StakePayment StakePayment?
+}
+
+model StakePayment {
+  id      String @id @default(uuid())
+  amount  Float
+  Stake   Stake  @relation(fields: [stakeId], references: [id])
+  stakeId String @unique
+}
+
+enum Challengetype {
   public
   private
 }
-enum Status{
+
+enum Status {
   pending
   payoutsucess
   completed
 }
-enum Completed{
+
+enum Completed {
   CurrentlyRunning
   Completed
 }
-enum CommpetionType{
+
+enum CommpetionType {
   Steps
   Sleep
 }
- 

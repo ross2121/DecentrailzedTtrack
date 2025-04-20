@@ -25,11 +25,18 @@ const connection = new web3_js_1.Connection("https://api.devnet.solana.com");
 const router = (0, express_1.Router)();
 dotenv_1.default.config();
 const privatekey = process.env.PRIVATE_KEY;
-const algorithm = 'aes-256-cbc';
-const key = crypto_1.default.scryptSync(process.env.CRYPTO_SECRET || 'your-secret', 'salt', 32);
+const algorithm = "aes-256-cbc";
+const key = crypto_1.default.scryptSync(process.env.CRYPTO_SECRET || "your-secret", "salt", 32);
 router.post("/create/challenge", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { name, memberqty, Dailystep, Amount, Digital_Currency, days, userid, startdate, enddate } = req.body;
-    const verify = type_1.challenge.safeParse({ name, memberqty, Dailystep, Amount, Digital_Currency, days });
+    const { name, memberqty, Dailystep, Amount, Digital_Currency, days, userid, startdate, enddate, } = req.body;
+    const verify = type_1.challenge.safeParse({
+        name,
+        memberqty,
+        Dailystep,
+        Amount,
+        Digital_Currency,
+        days,
+    });
     if (!verify.success) {
         return res.status(400).json({ error: verify.error.errors });
     }
@@ -50,9 +57,11 @@ router.post("/create/challenge", (req, res) => __awaiter(void 0, void 0, void 0,
                 startdate,
                 enddate,
                 // Request:[]
-            }
+            },
         });
-        return res.status(201).json({ message: "Challenge Created Successfully", challenge });
+        return res
+            .status(201)
+            .json({ message: "Challenge Created Successfully", challenge });
     }
     catch (error) {
         console.log(error);
@@ -63,19 +72,21 @@ router.get("/challenge/user/:id", (req, res) => __awaiter(void 0, void 0, void 0
     const id = req.params.id;
     const challenge = yield prisma.challenge.findUnique({
         where: {
-            id: id
-        }
+            id: id,
+        },
     });
     if (!challenge) {
-        return res.status(400).json({ message: "No challenge found for a particular id" });
+        return res
+            .status(400)
+            .json({ message: "No challenge found for a particular id" });
     }
     return res.status(200).json({ challenge });
 }));
 router.get("/challenge/public", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const allchalange = yield prisma.challenge.findMany({
         where: {
-            type: "public"
-        }
+            type: "public",
+        },
     });
     return res.status(200).json({ allchalange });
 }));
@@ -87,15 +98,17 @@ router.post("/step/verification", (req, res) => __awaiter(void 0, void 0, void 0
     const user = yield prisma.steps.findMany({
         where: {
             userid: userid,
-        }
+        },
     });
     const challeng = yield prisma.challenge.findUnique({
         where: {
-            id: challengeid
-        }
+            id: challengeid,
+        },
     });
     if (!challeng) {
-        return res.status(400).json({ message: "No challenge found for that particular id" });
+        return res
+            .status(400)
+            .json({ message: "No challenge found for that particular id" });
     }
     const Stepmap = {};
     user.map((users) => {
@@ -112,10 +125,11 @@ router.post("/step/verification", (req, res) => __awaiter(void 0, void 0, void 0
     console.log(challeng.days);
     while (i < challeng.days) {
         console.log("chee");
-        console.log(Stepmap[date.toISOString().split('T')[0]]);
-        if (Stepmap[date.toISOString().split('T')[0]] < challeng.Dailystep || !Stepmap[date.toISOString().split('T')[0]]) {
+        console.log(Stepmap[date.toISOString().split("T")[0]]);
+        if (Stepmap[date.toISOString().split("T")[0]] < challeng.Dailystep ||
+            !Stepmap[date.toISOString().split("T")[0]]) {
             console.log("check 3");
-            console.log(date.toISOString().split('T')[0]);
+            console.log(date.toISOString().split("T")[0]);
             confirm = false;
             break;
         }
@@ -127,10 +141,12 @@ router.post("/step/verification", (req, res) => __awaiter(void 0, void 0, void 0
         yield prisma.payoutPerson.create({
             data: {
                 userId: userid,
-                challengeId: challeng.id
-            }
+                challengeId: challeng.id,
+            },
         });
-        return res.status(200).json({ message: "USer successfully completed to the contest" });
+        return res
+            .status(200)
+            .json({ message: "USer successfully completed to the contest" });
     }
     return res.json({ message: "User  fail to complete the test" });
 }));
@@ -138,26 +154,30 @@ router.get("/challenge/private/:username", (req, res) => __awaiter(void 0, void 
     const username = req.params.username;
     const userid = yield prisma.user.findUnique({
         where: {
-            username: username
-        }
+            username: username,
+        },
     });
     if (!userid) {
-        return res.status(400).json({ message: "NO user id found for particular id" });
+        return res
+            .status(400)
+            .json({ message: "NO user id found for particular id" });
     }
     const allchalange = yield prisma.challenge.findMany({
         where: {
-            OR: [{
+            OR: [
+                {
                     Request: {
-                        has: userid.username
+                        has: userid.username,
                     },
                 },
                 {
                     members: {
-                        has: userid.id
+                        has: userid.id,
                     },
-                }],
-            type: "private"
-        }
+                },
+            ],
+            type: "private",
+        },
     });
     return res.status(200).json({ allchalange });
 }));
@@ -165,8 +185,8 @@ router.get("/history/prevgame/:userid", (req, res) => __awaiter(void 0, void 0, 
     const useid = req.params.userid;
     const tournatment = yield prisma.challenge.findMany({
         where: {
-            userid: useid
-        }
+            userid: useid,
+        },
     });
     return res.status(200).json({ Tournament: tournatment });
 }));
@@ -175,9 +195,9 @@ router.get("/history/prev/:userid", (req, res) => __awaiter(void 0, void 0, void
     const tournatment = yield prisma.challenge.findMany({
         where: {
             members: {
-                has: useid
-            }
-        }
+                has: useid,
+            },
+        },
     });
     return res.status(200).json({ Tournament: tournatment });
 }));
@@ -188,16 +208,16 @@ router.post("/challenge/retry", (req, res) => __awaiter(void 0, void 0, void 0, 
     }
     const challenge = yield prisma.challenge.findUnique({
         where: {
-            id: challengeid
-        }
+            id: challengeid,
+        },
     });
     if (!challenge) {
         return res.status(400).json({ message: "Challenge not found" });
     }
     const userr = yield prisma.remainingPerson.findMany({
         where: {
-            challengeId: challengeid
-        }
+            challengeId: challengeid,
+        },
     });
     if (!userr) {
         return res.status(440).json({ message: "No user found" });
@@ -211,8 +231,8 @@ router.post("/challenge/retry", (req, res) => __awaiter(void 0, void 0, void 0, 
             const userid = userr[i].userId;
             const user = yield prisma.user.findUnique({
                 where: {
-                    id: userid
-                }
+                    id: userid,
+                },
             });
             if (!user) {
                 return res.json({ message: "no user found" });
@@ -224,16 +244,17 @@ router.post("/challenge/retry", (req, res) => __awaiter(void 0, void 0, void 0, 
                     where: {
                         challengeId_userId: {
                             challengeId: challenge.id,
-                            userId: user.id
-                        }
-                    }
+                            userId: user.id,
+                        },
+                    },
                 });
                 yield prisma.challenge.update({
                     where: {
-                        id: challenge.id
-                    }, data: {
-                        Totalamount: challenge.Totalamount - amount
-                    }
+                        id: challenge.id,
+                    },
+                    data: {
+                        Totalamount: challenge.Totalamount - amount,
+                    },
                 });
             }
             else {
@@ -252,10 +273,11 @@ router.get("/challenge/:userid", (req, res) => __awaiter(void 0, void 0, void 0,
     }
     const user = yield prisma.user.findUnique({
         where: {
-            id: userid
-        }, include: {
-            challenge: true
-        }
+            id: userid,
+        },
+        include: {
+            challenge: true,
+        },
     });
     if (!user) {
         return res.status(400).json({ message: "No user found" });
@@ -269,8 +291,8 @@ router.get("/participated/:userid", (req, res) => __awaiter(void 0, void 0, void
     }
     const user = yield prisma.challenge.findMany({
         where: {
-            members: userid
-        }
+            members: userid,
+        },
     });
     if (!user) {
         return res.status(400).json({ message: "No user found for paricular id" });
@@ -284,8 +306,8 @@ router.post("/send/wallet", (req, res) => __awaiter(void 0, void 0, void 0, func
         console.log(transaction);
         const user = yield prisma.user.findFirst({
             where: {
-                publickey: transaction.signatures[0].publicKey.toBase58()
-            }
+                publickey: transaction.signatures[0].publicKey.toBase58(),
+            },
         });
         console.log("check1");
         console.log("publickey", user === null || user === void 0 ? void 0 : user.publickey);
@@ -296,10 +318,10 @@ router.post("/send/wallet", (req, res) => __awaiter(void 0, void 0, void 0, func
         }
         // const bufferfrom=Buffer.from(user.iv,'hex')
         // @ts-ignore
-        const iv = Buffer.from(user.iv, 'hex');
+        const iv = Buffer.from(user.iv, "hex");
         const decipher = crypto_1.default.createDecipheriv(algorithm, key, iv);
-        let decrypted = decipher.update(user.privatekey, 'hex', 'utf8');
-        decrypted += decipher.final('utf8');
+        let decrypted = decipher.update(user.privatekey, "hex", "utf8");
+        decrypted += decipher.final("utf8");
         console.log(decrypted);
         const trax = yield recivetransaction(decrypted, transaction);
         if (trax) {
@@ -322,8 +344,8 @@ router.post("/challenge/join/public/:id", (req, res) => __awaiter(void 0, void 0
     console.log("id", id);
     const challenge = yield prisma.challenge.findUnique({
         where: {
-            id
-        }
+            id,
+        },
     });
     if (!challenge) {
         console.log("no chalelenn");
@@ -334,8 +356,8 @@ router.post("/challenge/join/public/:id", (req, res) => __awaiter(void 0, void 0
     console.log("decoded", decoded);
     const user = yield prisma.user.findFirst({
         where: {
-            publickey: decoded.signatures[0].publicKey.toBase58()
-        }
+            publickey: decoded.signatures[0].publicKey.toBase58(),
+        },
     });
     console.log(user);
     if (!user) {
@@ -346,9 +368,9 @@ router.post("/challenge/join/public/:id", (req, res) => __awaiter(void 0, void 0
         const users = yield prisma.challenge.findFirst({
             where: {
                 Request: {
-                    has: user.username
-                }
-            }
+                    has: user.username,
+                },
+            },
         });
         if (!users) {
             return res.status(440).json({ message: "You are not invited" });
@@ -373,20 +395,22 @@ router.post("/challenge/join/public/:id", (req, res) => __awaiter(void 0, void 0
         return;
     }
     // @ts-ignore
-    const iv = Buffer.from(user.iv, 'hex');
+    const iv = Buffer.from(user.iv, "hex");
     const decipher = crypto_1.default.createDecipheriv(algorithm, key, iv);
-    let decrypted = decipher.update(user.privatekey, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
+    let decrypted = decipher.update(user.privatekey, "hex", "utf8");
+    decrypted += decipher.final("utf8");
     const userprev = yield prisma.challenge.findUnique({
         where: {
             id: challenge.id,
             members: {
-                has: user.id
-            }
-        }
+                has: user.id,
+            },
+        },
     });
     if (userprev) {
-        return res.status(500).json({ message: "USer alredy added in the contest" });
+        return res
+            .status(500)
+            .json({ message: "USer alredy added in the contest" });
     }
     let trans = false;
     try {
@@ -396,13 +420,14 @@ router.post("/challenge/join/public/:id", (req, res) => __awaiter(void 0, void 0
             console.log(trans);
             const updatechallenge = yield prisma.challenge.update({
                 where: {
-                    id
-                }, data: {
+                    id,
+                },
+                data: {
                     members: {
-                        push: user.id
+                        push: user.id,
                     },
-                    Totalamount: challenge.Totalamount + challenge.Amount
-                }
+                    Totalamount: challenge.Totalamount + challenge.Amount,
+                },
             });
             if (challenge.type == "private") {
                 console.log("chek1");
@@ -411,9 +436,9 @@ router.post("/challenge/join/public/:id", (req, res) => __awaiter(void 0, void 0
                 const users = yield prisma.challenge.findFirst({
                     where: {
                         Request: {
-                            has: user.username
-                        }
-                    }
+                            has: user.username,
+                        },
+                    },
                 });
                 if (!users) {
                     return null;
@@ -421,16 +446,19 @@ router.post("/challenge/join/public/:id", (req, res) => __awaiter(void 0, void 0
                 const updatedRequest = challenge.Request.filter((usert) => usert !== user.username);
                 yield prisma.challenge.update({
                     where: {
-                        id: users.id
-                    }, data: {
+                        id: users.id,
+                    },
+                    data: {
                         Request: {
-                            set: updatedRequest
-                        }
-                    }
+                            set: updatedRequest,
+                        },
+                    },
                 });
             }
             console.log("challenge", updatechallenge);
-            return res.status(200).json({ message: "Added to the contest", updatechallenge });
+            return res
+                .status(200)
+                .json({ message: "Added to the contest", updatechallenge });
         }
     }
     catch (e) {
@@ -445,14 +473,16 @@ router.post("/challenge/join/public/:id", (req, res) => __awaiter(void 0, void 0
                 where: {
                     id: id,
                     members: {
-                        has: user.id
-                    }
+                        has: user.id,
+                    },
                 },
             });
             console.log(users);
             if (!users) {
                 const transaction = yield revertback(privatekey, decoded.signatures[0].publicKey.toBase58(), challenge.Amount);
-                return res.status(200).json({ message: "Transaction succeed Revert back the money", e });
+                return res
+                    .status(200)
+                    .json({ message: "Transaction succeed Revert back the money", e });
             }
         }
         return res.status(400).json({ message: "TRY AGAIN", e });
@@ -463,17 +493,17 @@ router.get("/total/steps", (req, res) => __awaiter(void 0, void 0, void 0, funct
     const now = new Date();
     const offset = 5.5 * 60 * 60 * 1000;
     const istTime = new Date(now.getTime() + offset);
-    const todayStr = istTime.toISOString().split('T')[0];
+    const todayStr = istTime.toISOString().split("T")[0];
     const users = yield prisma.user.findMany({
         include: {
             step: {
                 where: {
-                    day: todayStr
+                    day: todayStr,
                 },
             },
         },
     });
-    const formattedSteps = users.map(user => {
+    const formattedSteps = users.map((user) => {
         var _a;
         return ({
             username: user.username,
@@ -489,14 +519,17 @@ router.post("/regular/update", (req, res) => __awaiter(void 0, void 0, void 0, f
     }
     const user = yield prisma.user.findUnique({
         where: {
-            id: userid
-        }, include: {
-            challenge: true
-        }
+            id: userid,
+        },
+        include: {
+            challenge: true,
+        },
     });
     const now = new Date();
     const offsetIST = 330;
-    const todayIST = new Date(now.getTime() + offsetIST * 60 * 1000).toISOString().split('T')[0];
+    const todayIST = new Date(now.getTime() + offsetIST * 60 * 1000)
+        .toISOString()
+        .split("T")[0];
     if (!user) {
         return res.status(500).json({ message: "No user found" });
     }
@@ -538,16 +571,16 @@ router.post("/challenge/finish", (req, res) => __awaiter(void 0, void 0, void 0,
         where: { id },
         include: {
             Payoutpeople: true,
-            Remaingpeople: true
-        }
+            Remaingpeople: true,
+        },
     });
     if (!challengee) {
         return res.status(400).json({ message: "No challenge found" });
     }
     const payoutlength = yield prisma.payoutPerson.findMany({
         where: {
-            challengeId: challengee.id
-        }
+            challengeId: challengee.id,
+        },
     });
     const equalamount = Number(challengee.Totalamount / payoutlength.length);
     console.log(equalamount);
@@ -555,8 +588,8 @@ router.post("/challenge/finish", (req, res) => __awaiter(void 0, void 0, void 0,
     for (let i = 0; i < challengee.Payoutpeople.length; i++) {
         const user = yield prisma.user.findUnique({
             where: {
-                id: challengee.Payoutpeople[i].userId
-            }
+                id: challengee.Payoutpeople[i].userId,
+            },
         });
         if (!user) {
             return res.status(500).json({ message: "No user found" });
@@ -568,9 +601,9 @@ router.post("/challenge/finish", (req, res) => __awaiter(void 0, void 0, void 0,
                 where: {
                     challengeId_userId: {
                         challengeId: challengee.id,
-                        userId: user.id
-                    }
-                }
+                        userId: user.id,
+                    },
+                },
             });
             if (transaction) {
                 yield prisma.challenge.update({
@@ -584,7 +617,7 @@ router.post("/challenge/finish", (req, res) => __awaiter(void 0, void 0, void 0,
                 yield prisma.remainingPerson.create({
                     data: {
                         userId: user.id,
-                        challengeId: challengee.id
+                        challengeId: challengee.id,
                     },
                 });
             }
@@ -596,15 +629,15 @@ router.post("/challenge/finish", (req, res) => __awaiter(void 0, void 0, void 0,
                     where: {
                         challengeId_userId: {
                             userId: user.id,
-                            challengeId: challengee.id
-                        }
-                    }
+                            challengeId: challengee.id,
+                        },
+                    },
                 });
                 yield prisma.remainingPerson.create({
                     data: {
                         userId: user.id,
-                        challengeId: challengee.id
-                    }
+                        challengeId: challengee.id,
+                    },
                 });
             }));
         }
@@ -613,18 +646,27 @@ router.post("/challenge/finish", (req, res) => __awaiter(void 0, void 0, void 0,
 }));
 router.post("/challenge/private", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const { userid, Amount, Digital_Currency, days, Dailystep, memberqty, name, request, startdate, enddate } = req.body;
-        const verify = type_1.challenge.safeParse({ name, memberqty, Dailystep, Amount, Digital_Currency, days });
+        const { userid, Amount, Digital_Currency, days, Dailystep, memberqty, name, request, startdate, enddate, } = req.body;
+        const verify = type_1.challenge.safeParse({
+            name,
+            memberqty,
+            Dailystep,
+            Amount,
+            Digital_Currency,
+            days,
+        });
         if (!verify.success) {
             return res.status(400).json({ error: verify.error.errors });
         }
         const user = yield prisma.user.findUnique({
             where: {
-                id: userid
-            }
+                id: userid,
+            },
         });
         if (!user) {
-            return res.status(440).json({ message: "No user found for paticular id" });
+            return res
+                .status(440)
+                .json({ message: "No user found for paticular id" });
         }
         const updatedRequest = [user.username, ...(request || [])];
         yield prisma.challenge.create({
@@ -643,8 +685,8 @@ router.post("/challenge/private", (req, res) => __awaiter(void 0, void 0, void 0
                 Request: updatedRequest,
                 PayoutStatus: "pending",
                 startdate,
-                enddate
-            }
+                enddate,
+            },
         });
         return res.json({ message: "Challenge created succefull" });
     }
@@ -660,15 +702,17 @@ router.get("/challenge/info/:id", (req, res) => __awaiter(void 0, void 0, void 0
     }
     const challenge = yield prisma.challenge.findUnique({
         where: {
-            id: id
-        }
+            id: id,
+        },
     });
     if (!challenge) {
-        return res.status(400).json({ message: "No challenge found for particular id" });
+        return res
+            .status(400)
+            .json({ message: "No challenge found for particular id" });
     }
     const startdate = challenge.startdate;
     const enddate = challenge.enddate;
-    const today = new Date().toISOString().split('T')[0];
+    const today = new Date().toISOString().split("T")[0];
     const effective = today > enddate ? enddate : today;
     const result = [];
     for (let i = 0; i < challenge.members.length; i++) {
@@ -678,18 +722,18 @@ router.get("/challenge/info/:id", (req, res) => __awaiter(void 0, void 0, void 0
                 userid: user,
                 day: {
                     gte: startdate,
-                    lte: effective
-                }
+                    lte: effective,
+                },
             },
             select: {
                 day: true,
-                steps: true
-            }
+                steps: true,
+            },
         });
         const users = yield prisma.user.findUnique({
             where: {
-                id: user
-            }
+                id: user,
+            },
         });
         step.forEach((step) => {
             result.push({
@@ -699,8 +743,9 @@ router.get("/challenge/info/:id", (req, res) => __awaiter(void 0, void 0, void 0
             });
         });
     }
-    return res.status(200).json({ result, startdate: startdate,
-        enddate: enddate });
+    return res
+        .status(200)
+        .json({ result, startdate: startdate, enddate: enddate });
 }));
 router.post("/challenge/acceptchallenge", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { chaalengeid, userid, username, tx } = req.body;
@@ -710,13 +755,13 @@ router.post("/challenge/acceptchallenge", (req, res) => __awaiter(void 0, void 0
     }
     const challenge = yield prisma.challenge.findUnique({
         where: {
-            id: chaalengeid
-        }
+            id: chaalengeid,
+        },
     });
     const user = yield prisma.user.findUnique({
         where: {
-            username
-        }
+            username,
+        },
     });
     if (!user) {
         return res.json({ message: "No user find" });
@@ -731,30 +776,33 @@ router.post("/challenge/acceptchallenge", (req, res) => __awaiter(void 0, void 0
         }
     }
     if (!(challenge === null || challenge === void 0 ? void 0 : challenge.Request[username])) {
-        res.json({ message: "You were not added to the Challenge Kindly ask the user to add you to challenge" });
+        res.json({
+            message: "You were not added to the Challenge Kindly ask the user to add you to challenge",
+        });
         return;
     }
     yield prisma.$transaction((prisma) => __awaiter(void 0, void 0, void 0, function* () {
         // @ts-ignore
-        const iv = Buffer.from(user.iv, 'hex');
+        const iv = Buffer.from(user.iv, "hex");
         const decipher = crypto_1.default.createDecipheriv(algorithm, key, iv);
-        let decrypted = decipher.update(user.privatekey, 'hex', 'utf8');
-        decrypted += decipher.final('utf8');
+        let decrypted = decipher.update(user.privatekey, "hex", "utf8");
+        decrypted += decipher.final("utf8");
         const txs = yield recivetransaction(decrypted, decoded);
         if (!txs) {
             return res.json({ message: "Transactio failed" });
         }
         yield prisma.challenge.update({
             where: {
-                id: chaalengeid
-            }, data: {
+                id: chaalengeid,
+            },
+            data: {
                 Request: {
-                    set: challenge.Request.filter((user) => user !== username)
+                    set: challenge.Request.filter((user) => user !== username),
                 },
                 members: {
-                    push: user.username
-                }
-            }
+                    push: user.username,
+                },
+            },
         });
     }));
     return res.status(200).json({ message: "User added succe" });
@@ -768,7 +816,7 @@ function sendtrasaction(privatekey, publicKey, Amount) {
             const transaction = new web3_js_1.Transaction().add(web3_js_1.SystemProgram.transfer({
                 fromPubkey: keypair.publicKey,
                 toPubkey: new web3_js_1.PublicKey(publicKey),
-                lamports: Math.floor(web3_js_1.LAMPORTS_PER_SOL * Amount)
+                lamports: Math.floor(web3_js_1.LAMPORTS_PER_SOL * Amount),
             }));
             const send = yield connection.sendTransaction(transaction, [keypair]);
             console.log(send);
@@ -789,7 +837,7 @@ function revertback(privatekey, publicKey, amount) {
         const transaction = new web3_js_1.Transaction().add(web3_js_1.SystemProgram.transfer({
             fromPubkey: secretkey.publicKey,
             toPubkey: new web3_js_1.PublicKey(publicKey),
-            lamports: Math.floor(web3_js_1.LAMPORTS_PER_SOL * amount)
+            lamports: Math.floor(web3_js_1.LAMPORTS_PER_SOL * amount),
         }));
         const sendtransaction = yield (0, web3_js_1.sendAndConfirmTransaction)(connection, transaction, [secretkey]);
         return sendtransaction;
@@ -798,7 +846,9 @@ function revertback(privatekey, publicKey, amount) {
 function recivetransaction(privatekey, decoded) {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const privateKeyArray = privatekey.split(',').map(num => parseInt(num, 10));
+            const privateKeyArray = privatekey
+                .split(",")
+                .map((num) => parseInt(num, 10));
             const uintprivat = new Uint8Array(privateKeyArray);
             const secretkey = web3_js_1.Keypair.fromSecretKey(uintprivat);
             const sendtrasaction = yield (0, web3_js_1.sendAndConfirmTransaction)(connection, decoded, [secretkey]);
