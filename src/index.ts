@@ -9,10 +9,10 @@ import axios from "axios";
 import { sleeprouter } from "./Challenge/sleep";
 import { Gettime } from "./worker/Step";
 import { stakerouter } from "./Challenge/Stake";
-
 const app = express();
 app.use(express.json());
 app.use(cors());
+
 app.use("/api/v1", userrouter);
 app.use("/api/v1", challenges);
 app.use("/api/v1", sleeprouter);
@@ -25,8 +25,8 @@ app.get("/test", async (req: any, res: any) => {
   console.log(trydd.data);
   return res.json({ sol: trydd.data.solana.usd });
 });
-// Gettime();
 
+Gettime();
 const port = 3000;
 app.listen(port, () => {
   console.log(`Server is listening at ${port}`);
