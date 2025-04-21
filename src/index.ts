@@ -3,8 +3,6 @@ import { userrouter } from "./Auth/auth";
 import cors from "cors";
 import { challenges } from "./Challenge/tournament";
 import { Friend } from "./Auth/friend";
-import { PrismaClient } from "@prisma/client";
-import cron from "node-cron";
 import axios from "axios";
 import { sleeprouter } from "./Challenge/sleep";
 import { Gettime } from "./worker/Step";
@@ -26,7 +24,7 @@ app.get("/test", async (req: any, res: any) => {
   return res.json({ sol: trydd.data.solana.usd });
 });
 
-Gettime();
+// Gettime();
 const port = 3000;
 app.listen(port, () => {
   console.log(`Server is listening at ${port}`);

@@ -1,37 +1,98 @@
-import { Stake } from "./../../node_modules/.prisma/client/index.d";
 import { Express, Router } from "express";
 import { PrismaClient } from "@prisma/client";
 import { Staketype } from "../Auth/type";
+import { Transaction } from "@solana/web3.js";
+import crypto from "crypto";
+import { recivetransaction } from "./trxn";
 const prisma = new PrismaClient();
 const router = Router();
+const algorithm = "aes-256-cbc";
+const key = crypto.scryptSync(
+  process.env.CRYPTO_SECRET || "your-secret",
+  "salt",
+  32
+);
 router.post("/create/stake", async (req: any, res: any) => {
-  const { userid, amount, Hours, days, Startdate, enddate } = req.body;
-  if (!userid || !amount || !Hours || !days || !Startdate || !enddate) {
-    return res.status(400).json({ message: "please provide all the fields" });
-  }
-  const safeparse = Staketype.safeParse(req.body);
+  console.log("heuu");
+  const { userid, amount, Hours, days, Startdate, enddate, tx } = req.body;
+  // if (!userid || !amount || !Hours || !days || !Startdate || !enddate) {
+  //   console.log("userid", userid);
+  //   return res.status(400).json({ message: "please provide all the fields" });
+  // }
+  const safeparse = Staketype.safeParse({
+    amount,
+    Hours,
+    days,
+    Startdate,
+    enddate,
+  });
+  console.log("heuu");
   if (!safeparse.success) {
+    console.log("safeparse.error", safeparse.error.format());
     return res.status(400).json({ message: safeparse.error.format() });
   }
-  const user = await prisma.user.findUnique({
+  console.log(tx);
+  const stakeExist = await prisma.stake.findFirst({
     where: {
-      id: userid,
+      Userid: userid,
+    },
+  });
+  if (stakeExist?.Status == "CurrentlyRunning") {
+    console.log("stakeExist", stakeExist);
+    return res.status(400).json({ message: "You already have a stake" });
+  }
+
+  const decoded = Transaction.from(tx.data);
+  console.log("decoded", decoded);
+  const user = await prisma.user.findFirst({
+    where: {
+      publickey: decoded.signatures[0].publicKey.toBase58(),
     },
   });
   if (!user) {
     return res.status(404).json({ message: "user not found" });
   }
-  const stake = await prisma.stake.create({
-    data: {
-      startdate: Startdate,
-      enddate: enddate,
-      Userid: userid,
-      amount: amount,
-      Hours: Hours,
-      Days: days,
-    },
-  });
-  return res.status(200).json({ message: "stake created successfully", stake });
+  //   @ts-ignore
+  const iv = Buffer.from(user.iv, "hex");
+  const decipher = crypto.createDecipheriv(algorithm, key, iv);
+  let decrypted = decipher.update(user.privatekey, "hex", "utf8");
+  decrypted += decipher.final("utf8");
+  let trans = false;
+  try {
+    trans = await recivetransaction(decrypted, decoded);
+    const stake = await prisma.stake.create({
+      data: {
+        startdate: Startdate,
+        enddate: enddate,
+        Userid: userid,
+        amount: amount,
+        Hours: Hours,
+        Days: days,
+      },
+    });
+    return res.status(200).json({
+      message: "stake created successfully",
+      stake,
+    });
+  } catch (e) {
+    if (trans) {
+      const stake = await prisma.stake.create({
+        data: {
+          startdate: Startdate,
+          enddate: enddate,
+          Userid: userid,
+          amount: amount,
+          Hours: Hours,
+          Days: days,
+        },
+      });
+      return res.status(200).json({
+        message: "stake created successfully",
+        stake,
+      });
+    }
+  }
+  //   return res.status(200).json({ message: "stake created successfully", stake });
 });
 router.get("/getstake/:userid", async (req: any, res: any) => {
   const { userid } = req.params;
@@ -56,6 +117,14 @@ router.get("/getstake/:userid", async (req: any, res: any) => {
 });
 router.post("/stake/verification", async (req: any, res: any) => {
   const { Stakeid } = req.body;
+  await prisma.stake.update({
+    where: {
+      id: Stakeid,
+    },
+    data: {
+      Status: "Completed",
+    },
+  });
   if (!Stakeid) {
     return res.status(440).json("Required fields ");
   }
@@ -108,11 +177,8 @@ router.post("/stake/verification", async (req: any, res: any) => {
       console.log("diff", diff);
       const penalty = solperday * penaltyper * diff;
       amount += solperday - penalty;
-      console.log("amount correct", amount);
     } else {
       amount += solperday + solperday * (1 / 100);
-      console.log("at", solperday + solperday * (1 / 100));
-      console.log("amount", amount);
     }
     date.setDate(date.getDate() + 1);
     i++;
