@@ -109,6 +109,7 @@ model Stake {
 model StakePayment {
   id      String @id @default(uuid())
   amount  Float
+  Status   Status @default(pending)
   Stake   Stake  @relation(fields: [stakeId], references: [id])
   stakeId String @unique
 }
