@@ -10,9 +10,12 @@ export async function Gettime() {
           const date=new Date();
           date.setHours(0,0,0,0);
           const endates=new Date(enddate.enddate);
+          
+          
+          
           endates.setHours(0,0,0,0);
           let status;
-          if(date>endates && enddate.Status=="CurrentlyRunning"){
+              if(date>endates && enddate.Status=="CurrentlyRunning"){
                status=await prisma.stake.update({
                   where:{
                       id:enddate.id
