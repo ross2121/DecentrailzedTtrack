@@ -94,12 +94,12 @@ model Sleep {
 }
 model Stake {
   id           String        @id @unique @default(uuid())
-  amount       Int
+  amount       Float
   Hours        String
   startdate    String
   Badges       Badges[] 
   currentday   Int
-  WithdrawAmount Int
+  WithdrawAmount Float
   Updateddate   String
   Userid       String        @unique   
   misseday      Int

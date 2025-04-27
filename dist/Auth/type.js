@@ -27,10 +27,10 @@ exports.Staketype = zod_1.z.object({
         .number()
         .positive("Amount must be a positive number")
         .gt(0, "Amount must be greater than 0"),
-    days: zod_1.z.number().int().positive("Days must be a positive integer"),
+    // days: z.number().int().positive("Days must be a positive integer"),
     Hours: zod_1.z.string().min(1, "Hours is required"),
     Startdate: zod_1.z.string().min(1, "Start date is required"),
-    enddate: zod_1.z.string().min(1, "End date is required"),
+    // enddate: z.string().min(1, "End date is required"),
 });
 exports.sleepchallenge = zod_1.z.object({
     name: zod_1.z.string().min(1, "Name is required"),

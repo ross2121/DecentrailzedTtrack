@@ -25,10 +25,10 @@ export const Staketype = z.object({
     .number()
     .positive("Amount must be a positive number")
     .gt(0, "Amount must be greater than 0"),
-  days: z.number().int().positive("Days must be a positive integer"),
+  // days: z.number().int().positive("Days must be a positive integer"),
   Hours: z.string().min(1, "Hours is required"),
   Startdate: z.string().min(1, "Start date is required"),
-  enddate: z.string().min(1, "End date is required"),
+  // enddate: z.string().min(1, "End date is required"),
 });
 export const sleepchallenge = z.object({
   name: z.string().min(1, "Name is required"),
