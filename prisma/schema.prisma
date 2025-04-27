@@ -92,15 +92,16 @@ model Sleep {
   userid String
   user   User   @relation(references: [id], fields: [userid])
 }
-
 model Stake {
   id           String        @id @unique @default(uuid())
   amount       Int
-  Days         Int
   Hours        String
   startdate    String
-  enddate      String
-  Userid       String        @unique
+  Badges       Badges[] 
+  currentday   Int
+  WithdrawAmount Int
+  Updateddate   String
+  Userid       String        @unique   
   Status       Completed     @default(CurrentlyRunning)
   User         User          @relation(references: [id], fields: [Userid])
   StakePayment StakePayment?
@@ -133,4 +134,11 @@ enum Completed {
 enum CommpetionType {
   Steps
   Sleep
+}
+enum Badges{
+ seven_days
+ fourteen_days
+ thirty_days
+ ninty_days
+ one_eighty_days
 }

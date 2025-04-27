@@ -13,25 +13,16 @@ const key = crypto.scryptSync(
   32
 );
 router.post("/create/stake", async (req: any, res: any) => {
-  console.log("heuu");
-  const { userid, amount, Hours, days, Startdate, enddate, tx } = req.body;
-  // if (!userid || !amount || !Hours || !days || !Startdate || !enddate) {
-  //   console.log("userid", userid);
-  //   return res.status(400).json({ message: "please provide all the fields" });
-  // }
+  const { userid, amount, Hours, Startdate, tx } = req.body;
   const safeparse = Staketype.safeParse({
     amount,
     Hours,
-    days,
     Startdate,
-    enddate,
   });
-  console.log("heuu");
   if (!safeparse.success) {
     console.log("safeparse.error", safeparse.error.format());
     return res.status(400).json({ message: safeparse.error.format() });
   }
-  console.log(tx);
   const stakeExist = await prisma.stake.findFirst({
     where: {
       Userid: userid,
@@ -41,9 +32,7 @@ router.post("/create/stake", async (req: any, res: any) => {
     console.log("stakeExist", stakeExist);
     return res.status(400).json({ message: "You already have a stake" });
   }
-
   const decoded = Transaction.from(tx.data);
-  console.log("decoded", decoded);
   const user = await prisma.user.findFirst({
     where: {
       publickey: decoded.signatures[0].publicKey.toBase58(),
@@ -63,11 +52,12 @@ router.post("/create/stake", async (req: any, res: any) => {
     const stake = await prisma.stake.create({
       data: {
         startdate: Startdate,
-        enddate: enddate,
         Userid: userid,
         amount: amount,
         Hours: Hours,
-        Days: days,
+        currentday:0,
+        WithdrawAmount:amount,
+        Updateddate:Startdate
       },
     });
     return res.status(200).json({
@@ -79,11 +69,12 @@ router.post("/create/stake", async (req: any, res: any) => {
       const stake = await prisma.stake.create({
         data: {
           startdate: Startdate,
-          enddate: enddate,
           Userid: userid,
           amount: amount,
           Hours: Hours,
-          Days: days,
+          currentday:0,
+          WithdrawAmount:amount,
+          Updateddate:Startdate
         },
       });
       return res.status(200).json({
@@ -151,49 +142,24 @@ router.post("/stake/verification", async (req: any, res: any) => {
       userid: Stake.Userid,
     },
   });
-
   const Sleepmap: any = {};
   user.map((users) => {
     Sleepmap[users.day] = users.Hours || "0h 0m";
   });
-  //   console.log(Sleepmap);
-  let date = new Date(Stake.startdate);
-  let i = 0;
   if (Stake.Hours == null) {
     return res.status(400).json({ message: "Error" });
-  }
-  console.log("Stake.Hours", Stake.Hours);
-  const Stakehour = parseDuration(Stake.Hours);
-  let amount = 0;
-  const solperday = Stake.amount / Stake.Days;
-  console.log("solperday", solperday);
-  while (i < Stake.Days) {
-    // console.log(Sleepmap[date.toISOString().split("T")[0]]);
-    const dayhour = parseDuration(Sleepmap[date.toISOString().split("T")[0]]);
-    if (dayhour < Stakehour) {
-      const diff = Stakehour - dayhour;
-      const penaltyper = 2 / 100 / 60;
-      console.log("penalty", penaltyper);
-      console.log("diff", diff);
-      const penalty = solperday * penaltyper * diff;
-      amount += solperday - penalty;
-    } else {
-      amount += solperday + solperday * (1 / 100);
-    }
-    date.setDate(date.getDate() + 1);
-    i++;
-  }
-  await prisma.stakePayment.create({
-    data: {
-      amount: amount,
-      stakeId: stake.id,
-    },
-  });
+  }    
   return res.status(200).json({
     message: "USer successfully completed the Stake contest",
-    amount: amount,
+  
   });
 });
+router.get("/badges",async(req:any,res:any)=>{
+
+})
+router.post("/destake",async(req:any,res:any)=>{
+
+})
 
 function parseDuration(duration: string): number {
   const hoursMatch = duration.match(/(\d+)h/);
