@@ -169,20 +169,23 @@ router.get("/badges",async(req:any,res:any)=>{
   return res.status(200).json({badges})
 })
 router.post("/destake",async(req:any,res:any)=>{
-  const id=req.body;
+  const {id}=req.body;
   if(!id){
     return res.status(440).json({message:"No id available"})
   }
+  console.log(id);
+  
   let stake=await prisma.stake.findUnique({
     where:{
       id:id
     }
   })
+  console.log(stake) 
   if(!stake){
     return res.status(400).json({message:"No stake found"})
   }
   if(stake?.currentday<7){
-    stake=await prisma.stake.update({
+     stake=await prisma.stake.update({
       where:{
         id:stake.id
       },data:{
