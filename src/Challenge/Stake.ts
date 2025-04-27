@@ -57,7 +57,8 @@ router.post("/create/stake", async (req: any, res: any) => {
         Hours: Hours,
         currentday:0,
         WithdrawAmount:amount,
-        Updateddate:Startdate
+        Updateddate:Startdate,
+        misseday:0
       },
     });
     return res.status(200).json({
@@ -74,7 +75,8 @@ router.post("/create/stake", async (req: any, res: any) => {
           Hours: Hours,
           currentday:0,
           WithdrawAmount:amount,
-          Updateddate:Startdate
+          Updateddate:Startdate,
+          misseday:0
         },
       });
       return res.status(200).json({
@@ -155,10 +157,56 @@ router.post("/stake/verification", async (req: any, res: any) => {
   });
 });
 router.get("/badges",async(req:any,res:any)=>{
-
+  const userid=req.params;
+  if(!userid){
+    return res.status(400).json({message:"user id is not valid"})
+  }
+  const badges=await prisma.stake.findUnique({
+    where:{
+      Userid:userid
+    }
+  })
+  return res.status(200).json({badges})
 })
 router.post("/destake",async(req:any,res:any)=>{
-
+  const id=req.body;
+  if(!id){
+    return res.status(440).json({message:"No id available"})
+  }
+  let stake=await prisma.stake.findUnique({
+    where:{
+      id:id
+    }
+  })
+  if(!stake){
+    return res.status(400).json({message:"No stake found"})
+  }
+  if(stake?.currentday<7){
+    stake=await prisma.stake.update({
+      where:{
+        id:stake.id
+      },data:{
+        WithdrawAmount:stake.WithdrawAmount/2
+      }
+    })
+  }
+  await prisma.$transaction(async(prisma)=>{
+    await prisma.stakePayment.create({
+      data:
+      {amount:stake.WithdrawAmount,
+        stakeId:stake.id
+      }
+    })
+    await prisma.stake.update({
+      where:{
+        id:stake.id
+      },
+      data:{
+        Status:"Completed"
+      }
+    })
+  })
+  return res.status(200).json({message:"Destake completed you will get your money soon"})  
 })
 
 function parseDuration(duration: string): number {

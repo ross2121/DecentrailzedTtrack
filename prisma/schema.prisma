@@ -102,6 +102,7 @@ model Stake {
   WithdrawAmount Int
   Updateddate   String
   Userid       String        @unique   
+  misseday      Int
   Status       Completed     @default(CurrentlyRunning)
   User         User          @relation(references: [id], fields: [Userid])
   StakePayment StakePayment?
