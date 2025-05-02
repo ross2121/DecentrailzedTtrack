@@ -25,7 +25,7 @@ app.get("/test", async (req: any, res: any) => {
 });
 
 // Gettime();
-getstake();
+// getstake();
 const port = 3000;
 app.listen(port, () => {
   console.log(`Server is listening at ${port}`);

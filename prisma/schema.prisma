@@ -42,8 +42,8 @@ model Challenge {
   members          String[]
   userid           String
   Dailystep        Int?
-  Amount           Int
-  Totalamount      Int
+  Amount           Float
+  Totalamount      Float
   types            CommpetionType    @default(Steps)
   Digital_Currency String
   days             Int

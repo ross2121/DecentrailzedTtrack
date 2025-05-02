@@ -20,7 +20,6 @@ const friend_1 = require("./Auth/friend");
 const axios_1 = __importDefault(require("axios"));
 const sleep_1 = require("./Challenge/sleep");
 const Stake_1 = require("./Challenge/Stake");
-const stake_1 = require("./worker/stake");
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
 app.use((0, cors_1.default)());
@@ -34,7 +33,7 @@ app.get("/test", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     return res.json({ sol: trydd.data.solana.usd });
 }));
 // Gettime();
-(0, stake_1.getstake)();
+// getstake();
 const port = 3000;
 app.listen(port, () => {
     console.log(`Server is listening at ${port}`);
