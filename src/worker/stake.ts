@@ -5,13 +5,12 @@ const prisma = new PrismaClient();
 export async function getstake() {
   const cronSchedule = `* * * * *`;
   cron.schedule(cronSchedule, async () => {
-    console.log("hey");
+
      const stake=await prisma.stake.findMany({});
      for(let sta of stake ){
       const sleep=await prisma.sleep.findMany({where:{
         userid:sta.Userid
-       }});
-       console.log(sta.id)
+       }})
       if(sta.Status=="CurrentlyRunning"){
         const date=new Date(sta.Updateddate);
         date.setDate(date.getDate()+sta.currentday);
@@ -23,9 +22,6 @@ export async function getstake() {
            if(sleeeps.day==sta.Updateddate){
              const parsedsleep=parseDuration(sleeeps.Hours);
              const parsedtarget=parseDuration(sta.Hours);
-             console.log("sywa",sta);
-             console.log("parsed",parsedsleep)
-             console.log("parsed2",parsedtarget)
               if(parsedsleep>=parsedtarget){
                 console.log("suceess");
                 sta=await prisma.stake.update({
@@ -107,6 +103,42 @@ export async function getstake() {
             id:sta.Userid
           },data:{
             Notification:{push:"You have recived a 14 day badge congrats!!!"}
+          }
+         })
+      } 
+      if(sta.currentday==45){
+        sta=await prisma.stake.update({
+          where:{
+            id:sta.id
+          },data:{
+            Badges:{
+              push:"forty_five_days"
+            }
+          }
+        })
+        await prisma.user.update({
+          where:{
+            id:sta.Userid
+          },data:{
+            Notification:{push:"You have recived a 45 day badge congrats!!!"}
+          }
+         })
+      } 
+      if(sta.currentday==60){
+        sta=await prisma.stake.update({
+          where:{
+            id:sta.id
+          },data:{
+            Badges:{
+              push:"sixty_days"
+            }
+          }
+        })
+        await prisma.user.update({
+          where:{
+            id:sta.Userid
+          },data:{
+            Notification:{push:"You have recived a 60 day badge congrats!!!"}
           }
          })
       } 

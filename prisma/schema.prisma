@@ -64,7 +64,6 @@ model PayoutPerson {
   challengeId String
   userId      String
   Challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
-
   @@unique([challengeId, userId])
 }
 
@@ -73,7 +72,6 @@ model RemainingPerson {
   challengeId String
   userId      String
   Challenge   Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
-
   @@unique([challengeId, userId])
 }
 
@@ -140,6 +138,8 @@ enum Badges{
  seven_days
  fourteen_days
  thirty_days
+ forty_five_days
+ sixty_days
  ninty_days
  one_eighty_days
 }

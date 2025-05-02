@@ -762,13 +762,21 @@ router.get("/challenge/info/:id", async (req: any, res: any) => {
         id: user,
       },
     });
-    step.forEach((step) => {
+    if (step.length === 0) {
       result.push({
         username: users?.username,
-        steps: step.steps,
-        day: step.day,
+        steps: 0,
+        day: new Date().toISOString().split("T")[0],
       });
-    });
+    } else {
+      step.forEach((step) => {
+        result.push({
+          username: users?.username,
+          steps: step.steps,
+          day: step.day,
+        });
+      });
+    }
   }
   return res
     .status(200)
