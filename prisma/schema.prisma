@@ -32,7 +32,7 @@ model User {
   Participated        String[]
   HistoryParticipated String[]
   HistoryCreated      String[]
-  Stake               Stake?
+  Stake               Stake[]
 }
 
 model Challenge {
@@ -99,8 +99,11 @@ model Stake {
   currentday   Int
   WithdrawAmount Float
   Updateddate   String
-  Userid       String        @unique   
-  misseday      Int
+  Target       Int[]
+  NotAchieved   Int[]
+  daycount       Int?  @default(0)
+  Userid       String          
+  misseday      Int   
   Status       Completed     @default(CurrentlyRunning)
   User         User          @relation(references: [id], fields: [Userid])
   StakePayment StakePayment?

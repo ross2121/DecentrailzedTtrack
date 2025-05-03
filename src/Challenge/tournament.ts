@@ -744,6 +744,7 @@ router.get("/challenge/info/:id", async (req: any, res: any) => {
   const result: any = [];
   for (let i = 0; i < challenge.members.length; i++) {
     const user = challenge.members[i];
+    console.log("sa");
     const step = await prisma.steps.findMany({
       where: {
         userid: user,

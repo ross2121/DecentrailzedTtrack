@@ -3,7 +3,7 @@ import { PrismaClient } from "@prisma/client";
 import { Staketype } from "../Auth/type";
 import { Transaction } from "@solana/web3.js";
 import crypto from "crypto";
-import { recivetransaction } from "./trxn";
+import { recivetransaction, sendtrasaction } from "./trxn";
 const prisma = new PrismaClient();
 const router = Router();
 const algorithm = "aes-256-cbc";
@@ -58,7 +58,8 @@ router.post("/create/stake", async (req: any, res: any) => {
         currentday:0,
         WithdrawAmount:amount,
         Updateddate:Startdate,
-        misseday:0
+        misseday:0,
+        daycount:0,
       },
     });
     return res.status(200).json({
@@ -97,6 +98,7 @@ router.get("/getstake/:userid", async (req: any, res: any) => {
     where: {
       id: userid,
     },
+
   });
   if (!user) {
     return res.status(404).json({ message: "user not found" });
@@ -104,6 +106,7 @@ router.get("/getstake/:userid", async (req: any, res: any) => {
   const stake = await prisma.stake.findMany({
     where: {
       Userid: userid,
+      Status:"CurrentlyRunning"
     },
   });
   return res.status(200).json({ message: "stake created successfully", stake });
@@ -161,9 +164,10 @@ router.get("/badges",async(req:any,res:any)=>{
   if(!userid){
     return res.status(400).json({message:"user id is not valid"})
   }
-  const badges=await prisma.stake.findUnique({
+  const badges=await prisma.stake.findMany({
     where:{
-      Userid:userid
+      Userid:userid,
+      Status:"CurrentlyRunning"
     }
   })
   return res.status(200).json({badges})
@@ -210,6 +214,55 @@ router.post("/destake",async(req:any,res:any)=>{
     })
   })
   return res.status(200).json({message:"Destake completed you will get your money soon"})  
+})
+router.post("/stake/payout",async(req:any,res:any)=>{
+  const {id}=req.body;
+  const privatekey = process.env.PRIVATE_KEY;
+  if (!privatekey) {
+    return res.status(400).json({ message: "No private key found" });
+  }
+ const stakePayment=await prisma.stakePayment.findUnique({
+    where:{
+      id
+    }
+ })
+ if(!stakePayment){
+  return res.status(400).json({ message: "No Stake found" });
+ }
+ const stake=await prisma.stake.findUnique({
+  where:{
+    id:stakePayment.stakeId
+  }
+ })
+ if(!stake){
+  return res.status(400).json({ message: "No Stake found" });
+ }
+ const user=await prisma.user.findUnique({
+  where:{
+    id:stake.Userid
+  }
+ }) 
+ if(!user){
+  return res.status(400).json({ message: "No user found" });
+ }
+  try{
+    const transaction = await sendtrasaction(
+      privatekey,
+      user.publickey,
+      stakePayment.amount
+    );
+    if (transaction) {
+      await prisma.stakePayment.update({
+        where: { id },
+        data: {
+          Status:"completed"
+        },
+      });
+    }
+    return res.status(200).json({ message: "Transaction Succefull" });
+  }catch(e){
+    return res.status(400).json({ message: "Error in transaction" });
+  }
 })
 
 function parseDuration(duration: string): number {

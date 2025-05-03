@@ -11,7 +11,6 @@ import { getstake } from "./worker/stake";
 const app = express();
 app.use(express.json());
 app.use(cors());
-
 app.use("/api/v1", userrouter);
 app.use("/api/v1", challenges);
 app.use("/api/v1", sleeprouter);
@@ -25,7 +24,7 @@ app.get("/test", async (req: any, res: any) => {
 });
 
 // Gettime();
-// getstake();
+getstake();
 const port = 3000;
 app.listen(port, () => {
   console.log(`Server is listening at ${port}`);

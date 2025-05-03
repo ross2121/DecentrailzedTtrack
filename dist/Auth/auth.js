@@ -132,26 +132,50 @@ const generaotp = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const verifyotp = {
         from: process.env.EMAIL_USERNAME,
         to: email,
-        subject: 'Account verification OTP',
-        html: ` <div style="font-family: Poppins, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f9f9f9; padding: 20px; border: 1px solid #ccc; border-radius: 5px;">
-    <h1 style="font-size: 22px; font-weight: 500; color: #854CE6; text-align: center; margin-bottom: 30px;">Verify Your ERP Inventory Manager Account</h1>
-    <div style="background-color: #FFF; border: 1px solid #e5e5e5; border-radius: 5px; box-shadow: 0px 3px 6px rgba(0,0,0,0.05);">
-        <div style="background-color: #854CE6; border-top-left-radius: 5px; border-top-right-radius: 5px; padding: 20px 0;">
-            <h2 style="font-size: 28px; font-weight: 500; color: #FFF; text-align: center; margin-bottom: 10px;">Inventory Manager Verification Code</h2>
-            <h1 style="font-size: 32px; font-weight: 500; color: #FFF; text-align: center; margin-bottom: 20px;">${req.app.locals.OTP}</h1>
-        </div>
-        <div style="padding: 30px;">
-            <p style="font-size: 14px; color: #666; margin-bottom: 20px;">Dear Inventory Manager ${name},</p>
-            <p style="font-size: 14px; color: #666; margin-bottom: 20px;">Thank you for creating an ERP Inventory Manager account. To activate your account, please enter the following verification code:</p>
-            <p style="font-size: 20px; font-weight: 500; color: #666; text-align: center; margin-bottom: 30px; color: #854CE6;">${req.app.locals.OTP}</p>
-            <p style="font-size: 12px; color: #666; margin-bottom: 20px;">Please enter this code in the ERP system to activate your Inventory Manager account.</p>
-            <p style="font-size: 12px; color: #666; margin-bottom: 20px;">If you did not create an ERP Inventory Manager account, please disregard this email.</p>
-        </div>
-    </div>
-    <br>
-    <p style="font-size: 16px; color: #666; margin-bottom: 20px; text-align: center;">Best regards,<br>The ERP System Team</p>
-</div>
-`
+        subject: 'Solara App - Account Verification OTP',
+        html: `
+          <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8fafc; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <div style="text-align: center; margin-bottom: 25px;">
+              <h1 style="color: #3b82f6; font-size: 24px; font-weight: 600;">Welcome to Solara</h1>
+            </div>
+            
+            <div style="background-color: white; border-radius: 8px; padding: 30px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+              <div style="background: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%); border-radius: 6px; padding: 20px; margin-bottom: 25px;">
+                <h2 style="color: white; font-size: 20px; text-align: center; margin: 0;">Your Verification Code</h2>
+              </div>
+              
+              <div style="text-align: center; margin: 25px 0;">
+                <div style="display: inline-block; background-color: #f3f4f6; padding: 15px 30px; border-radius: 6px; border: 1px dashed #d1d5db;">
+                  <span style="font-size: 28px; font-weight: 600; color: #3b82f6; letter-spacing: 2px;">${req.app.locals.OTP}</span>
+                </div>
+              </div>
+              
+              <p style="color: #4b5563; font-size: 15px; line-height: 1.5; margin-bottom: 15px;">
+                Hello ${name},
+              </p>
+              
+              <p style="color: #4b5563; font-size: 15px; line-height: 1.5; margin-bottom: 15px;">
+                Thank you for signing up with Solara! To complete your account verification, please enter the following one-time password (OTP) in the app:
+              </p>
+              
+              <p style="color: #4b5563; font-size: 15px; line-height: 1.5; margin-bottom: 25px;">
+                This code will expire in 10 minutes. If you didn't request this code, please ignore this email or contact support if you have concerns.
+              </p>
+              
+              <div style="border-top: 1px solid #e5e7eb; padding-top: 20px; margin-top: 20px;">
+                <p style="color: #6b7280; font-size: 13px; text-align: center;">
+                  Need help? Contact our support team at <a href="mailto:support@solara.app" style="color: #3b82f6; text-decoration: none;">support@solara.app</a>
+                </p>
+              </div>
+            </div>
+            
+            <div style="margin-top: 25px; text-align: center;">
+              <p style="color: #9ca3af; font-size: 12px;">
+                © ${new Date().getFullYear()} Solara App. All rights reserved.
+              </p>
+            </div>
+          </div>
+        `
     };
     ;
     // console.log(reason);

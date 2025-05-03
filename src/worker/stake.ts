@@ -5,34 +5,40 @@ const prisma = new PrismaClient();
 export async function getstake() {
   const cronSchedule = `* * * * *`;
   cron.schedule(cronSchedule, async () => {
-
      const stake=await prisma.stake.findMany({});
+     const stakePayment=await prisma.stakePayment.findMany({
+      where:{
+        Status:"pending"
+      }
+     })
+     for(const payment of stakePayment){
+       await axios.post("http://localhost:3000/api/v1/stake/payout",{id:payment.id})     
+     }
      for(let sta of stake ){
       const sleep=await prisma.sleep.findMany({where:{
         userid:sta.Userid
-       }})
+       }});
       if(sta.Status=="CurrentlyRunning"){
         const date=new Date(sta.Updateddate);
         date.setDate(date.getDate()+sta.currentday);
-        const update=date.toISOString().split("T")[0]; 
-        // console.log("update",update);
+        const update=date.toISOString().split("T")[0];
         for(const sleeeps of sleep ){
-          console.log("sleep",sleeeps.day)
-          console.log("updated",sta.Updateddate)
            if(sleeeps.day==sta.Updateddate){
              const parsedsleep=parseDuration(sleeeps.Hours);
              const parsedtarget=parseDuration(sta.Hours);
               if(parsedsleep>=parsedtarget){
-                console.log("suceess");
                 sta=await prisma.stake.update({
                   where:{
                     id:sta.id
                   },data:{
-                    currentday:sta.currentday+1,
+                    currentday:{increment:1},
+                    daycount:{increment:1},  
+                    Target: { push: sta.daycount ?? 0}, 
                     Updateddate:update,
                     misseday:0
                   }
                 })
+               console.log("suceess",sta);
               }else{
                 const diffMinutes = parsedtarget - parsedsleep;
                 const penaltyRatePerMinute = 0.02 / 60
@@ -61,12 +67,16 @@ export async function getstake() {
             id:sta.id,
           },data:{
             WithdrawAmount:{decrement:penalty},
-            startdate:penaltyDate,
+            // startdate:penaltyDate,
             currentday:0,
+            daycount:{increment:1},  
+            NotAchieved: { push: sta.daycount ?? 0 },
             Updateddate:penaltyDate,
-            misseday:{ increment: 1 }
+            misseday:{ increment: 1 },
+            Badges:[]
           }
          })
+         console.log("failed",sta);
               }
               }
             }

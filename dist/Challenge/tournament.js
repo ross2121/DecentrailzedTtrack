@@ -717,6 +717,7 @@ router.get("/challenge/info/:id", (req, res) => __awaiter(void 0, void 0, void 0
     const result = [];
     for (let i = 0; i < challenge.members.length; i++) {
         const user = challenge.members[i];
+        console.log("sa");
         const step = yield prisma.steps.findMany({
             where: {
                 userid: user,
@@ -735,13 +736,22 @@ router.get("/challenge/info/:id", (req, res) => __awaiter(void 0, void 0, void 0
                 id: user,
             },
         });
-        step.forEach((step) => {
+        if (step.length === 0) {
             result.push({
                 username: users === null || users === void 0 ? void 0 : users.username,
-                steps: step.steps,
-                day: step.day,
+                steps: 0,
+                day: new Date().toISOString().split("T")[0],
             });
-        });
+        }
+        else {
+            step.forEach((step) => {
+                result.push({
+                    username: users === null || users === void 0 ? void 0 : users.username,
+                    steps: step.steps,
+                    day: step.day,
+                });
+            });
+        }
     }
     return res
         .status(200)
