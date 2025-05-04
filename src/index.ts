@@ -20,6 +20,7 @@ app.use("/api/v1", sleeprouter);
 app.use("/api/v1", Friend);
 app.use("/api/v1", stakerouter);
 app.get("/test", async (req: any, res: any) => {
+  console.log("ewe");
   const trydd = await axios.get(
     "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd"
   );
@@ -27,7 +28,7 @@ app.get("/test", async (req: any, res: any) => {
 });
 
 // Gettime();
-// getstake();
+getstake();
 // Getsleep();
 const port =process.env.PORT;
 console.log(port);
