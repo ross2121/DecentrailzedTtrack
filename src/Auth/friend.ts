@@ -213,6 +213,9 @@ router.post("/accept/friend",async(req:any,res:any)=>{
                 }
             }
         })
+             
+        
+        
         await prisma.user.update({
             where:{
                username:username
