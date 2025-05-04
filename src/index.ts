@@ -7,11 +7,13 @@ import axios from "axios";
 import { sleeprouter } from "./Challenge/sleep";
 import { Gettime } from "./worker/Step";
 import { stakerouter } from "./Challenge/Stake";
+import dotenv from "dotenv"
 import { getstake } from "./worker/stake";
 import { Getsleep } from "./worker/sleep";
 const app = express();
 app.use(express.json());
 app.use(cors());
+dotenv.config();
 app.use("/api/v1", userrouter);
 app.use("/api/v1", challenges);
 app.use("/api/v1", sleeprouter);
@@ -27,7 +29,8 @@ app.get("/test", async (req: any, res: any) => {
 // Gettime();
 // getstake();
 // Getsleep();
-const port = 3000;
+const port =process.env.PORT;
+console.log(port);
 app.listen(port, () => {
   console.log(`Server is listening at ${port}`);
 });

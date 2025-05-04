@@ -20,9 +20,11 @@ const friend_1 = require("./Auth/friend");
 const axios_1 = __importDefault(require("axios"));
 const sleep_1 = require("./Challenge/sleep");
 const Stake_1 = require("./Challenge/Stake");
+const dotenv_1 = __importDefault(require("dotenv"));
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
 app.use((0, cors_1.default)());
+dotenv_1.default.config();
 app.use("/api/v1", auth_1.userrouter);
 app.use("/api/v1", tournament_1.challenges);
 app.use("/api/v1", sleep_1.sleeprouter);
@@ -35,7 +37,8 @@ app.get("/test", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
 // Gettime();
 // getstake();
 // Getsleep();
-const port = 3000;
+const port = process.env.PORT;
+console.log(port);
 app.listen(port, () => {
     console.log(`Server is listening at ${port}`);
 });

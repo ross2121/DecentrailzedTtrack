@@ -79,6 +79,54 @@ router.post("/create/challenge/sleep",async(req:any,res:any)=>{
         return res.status(500).json({ message: "Error creating Challenge", error });
      }    
 })
+router.post("/challenge/sleep/private",async(req:any,res:any)=>{
+  const {name,memberqty,Hours,Amount,Digital_Currency,days,userid,startdate,enddate,request}=req.body;
+   const verify=sleepchallenge.safeParse({name,memberqty,Hours,Amount,Digital_Currency,days});
+  console.log("dasdas",request)
+   if(!verify.success){
+     return res.status(400).json({error:verify.error.errors})
+   }
+   if(request.length+1 !==memberqty){
+    return res.status(400).json({error:"Select more friends to continue"})
+   }
+   const user=await prisma.user.findUnique({
+    where:{
+      id:userid
+    }
+   })
+
+   if(user==null){
+    return;
+   }
+  
+   const updatedRequest = [user.username, ...(request || [])];
+   console.log("dasd",updatedRequest)
+   try{
+     const challenge= await prisma.challenge.create({
+      data:{
+          name,
+          members:[],
+          memberqty,
+          Hours,
+          Totalamount:0,
+          types:"Sleep",
+          Amount,
+          Digital_Currency,
+          days,
+          userid,
+          PayoutStatus:"pending",
+          startdate,
+          type:"private",
+          enddate,
+          Request:updatedRequest
+      }
+   })
+  return res.status(201).json({message:"Challenge Created Successfully",challenge},);}
+   catch(error){
+      console.log(error);
+      return res.status(500).json({ message: "Error creating Challenge", error });
+   }    
+})
 router.get("/sleep/daily/:userid",async(req:any,res:any)=>{
   const id = req.params.userid;
    if(!id){

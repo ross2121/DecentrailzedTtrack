@@ -92,6 +92,53 @@ router.post("/create/challenge/sleep", (req, res) => __awaiter(void 0, void 0, v
         return res.status(500).json({ message: "Error creating Challenge", error });
     }
 }));
+router.post("/challenge/sleep/private", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { name, memberqty, Hours, Amount, Digital_Currency, days, userid, startdate, enddate, request } = req.body;
+    const verify = type_1.sleepchallenge.safeParse({ name, memberqty, Hours, Amount, Digital_Currency, days });
+    console.log("dasdas", request);
+    if (!verify.success) {
+        return res.status(400).json({ error: verify.error.errors });
+    }
+    if (request.length + 1 !== memberqty) {
+        return res.status(400).json({ error: "Select more friends to continue" });
+    }
+    const user = yield prisma.user.findUnique({
+        where: {
+            id: userid
+        }
+    });
+    if (user == null) {
+        return;
+    }
+    const updatedRequest = [user.username, ...(request || [])];
+    console.log("dasd", updatedRequest);
+    try {
+        const challenge = yield prisma.challenge.create({
+            data: {
+                name,
+                members: [],
+                memberqty,
+                Hours,
+                Totalamount: 0,
+                types: "Sleep",
+                Amount,
+                Digital_Currency,
+                days,
+                userid,
+                PayoutStatus: "pending",
+                startdate,
+                type: "private",
+                enddate,
+                Request: updatedRequest
+            }
+        });
+        return res.status(201).json({ message: "Challenge Created Successfully", challenge });
+    }
+    catch (error) {
+        console.log(error);
+        return res.status(500).json({ message: "Error creating Challenge", error });
+    }
+}));
 router.get("/sleep/daily/:userid", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const id = req.params.userid;
     if (!id) {
