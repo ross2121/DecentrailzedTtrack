@@ -1,9 +1,13 @@
 import cron from "node-cron";
 import axios from "axios";
 import { PrismaClient } from "@prisma/client";
+import dotenv from "dotenv";
+dotenv.config();
+const url=process.env.BACKEND_URL
 const prisma = new PrismaClient();
 export async function getstake() {
   const cronSchedule = `* * * * *`;
+  console.log(url);
   cron.schedule(cronSchedule, async () => {
      const stake=await prisma.stake.findMany({});
      const stakePayment=await prisma.stakePayment.findMany({
@@ -11,8 +15,9 @@ export async function getstake() {
         Status:"pending"
       }
      })
+     console.log("heeu");
      for(const payment of stakePayment){
-       await axios.post("https://decentralize-gpfwdje9e7guf4hu.canadacentral-01.azurewebsites.net/api/v1/stake/payout",{id:payment.id})     
+       await axios.post(`${url}/stake/payout`,{id:payment.id})     
      }
      for(let sta of stake ){
       const sleep=await prisma.sleep.findMany({where:{
@@ -20,10 +25,17 @@ export async function getstake() {
        }});
       if(sta.Status=="CurrentlyRunning"){
         const date=new Date(sta.Updateddate);
-        date.setDate(date.getDate()+sta.currentday);
+        if(sta.daycount==null){
+          console.log("misseed");
+          return;
+        }
+        console.log("dasdasd",sta.daycount);
+        date.setDate(date.getDate()+1);
         const update=date.toISOString().split("T")[0];
+        console.log("update",update);
         for(const sleeeps of sleep ){
            if(sleeeps.day==sta.Updateddate){
+            console.log(sta.Updateddate);
              const parsedsleep=parseDuration(sleeeps.Hours);
              const parsedtarget=parseDuration(sta.Hours);
               if(parsedsleep>=parsedtarget){
@@ -43,6 +55,7 @@ export async function getstake() {
                 const diffMinutes = parsedtarget - parsedsleep;
                 const penaltyRatePerMinute = 0.02 / 60
                 let maxPenalty;
+
                 if (sta.misseday >= 7) {
                   maxPenalty = sta.amount * 0.05; 
                 } else if (sta.misseday >= 4) {
@@ -59,9 +72,10 @@ export async function getstake() {
                 penalty = Math.min(penalty, sta.WithdrawAmount);
                 console.log("penalty",penalty);
                 if(sta.WithdrawAmount-penalty<0){
-                  await axios.post("https://decentralize-gpfwdje9e7guf4hu.canadacentral-01.azurewebsites.net/api/v1/destake",{id:sta.id})
+                  await axios.post(`${url}/api/v1/destake`,{id:sta.id})
                 }
            const penaltyDate = new Date().toISOString().split('T')[0]
+           console.log(penaltyDate);
         sta= await prisma.stake.update({
           where:{
             id:sta.id,
@@ -71,7 +85,7 @@ export async function getstake() {
             currentday:0,
             daycount:{increment:1},  
             NotAchieved: { push: sta.daycount ?? 0 },
-            Updateddate:penaltyDate,
+            Updateddate:update,
             misseday:{ increment: 1 },
             Badges:[]
           }

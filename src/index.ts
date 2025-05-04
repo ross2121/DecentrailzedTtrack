@@ -24,9 +24,9 @@ app.get("/test", async (req: any, res: any) => {
   return res.json({ sol: trydd.data.solana.usd });
 });
 
-Gettime();
-getstake();
-Getsleep();
+// Gettime();
+// getstake();
+// Getsleep();
 const port = 3000;
 app.listen(port, () => {
   console.log(`Server is listening at ${port}`);

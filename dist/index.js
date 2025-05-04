@@ -19,10 +19,7 @@ const tournament_1 = require("./Challenge/tournament");
 const friend_1 = require("./Auth/friend");
 const axios_1 = __importDefault(require("axios"));
 const sleep_1 = require("./Challenge/sleep");
-const Step_1 = require("./worker/Step");
 const Stake_1 = require("./Challenge/Stake");
-const stake_1 = require("./worker/stake");
-const sleep_2 = require("./worker/sleep");
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
 app.use((0, cors_1.default)());
@@ -35,9 +32,9 @@ app.get("/test", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const trydd = yield axios_1.default.get("https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd");
     return res.json({ sol: trydd.data.solana.usd });
 }));
-(0, Step_1.Gettime)();
-(0, stake_1.getstake)();
-(0, sleep_2.Getsleep)();
+// Gettime();
+// getstake();
+// Getsleep();
 const port = 3000;
 app.listen(port, () => {
     console.log(`Server is listening at ${port}`);
