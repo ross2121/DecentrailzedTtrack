@@ -2,63 +2,84 @@ name: Deploy Node.js to Azure Web App
 
 on:
   push:
-    branches: [ "main" ]  # Adjust branch as needed
+    branches: [ "main" ]
+
 permissions:
-  id-token: write   # Required for Azure OIDC auth
+  id-token: write
   contents: read
+
 env:
-  AZURE_WEBAPP_NAME: "solara"         # Your Azure Web App name
-  AZURE_WEBAPP_PACKAGE_PATH: "."      # Path to your app (root directory)
-  NODE_VERSION: "20.12.2"                # Node.js version
+  AZURE_WEBAPP_NAME: "solara"
+  AZURE_WEBAPP_PACKAGE_PATH: "."
+  NODE_VERSION: "20.12.2"
   PORT: "8080"
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4      # Updated to latest
+      - uses: actions/checkout@v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4    # Updated to v4
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Install dependencies
-        run: npm install
+        run: |
+          npm ci
+          npx prisma generate
 
-      - name: Build (if applicable)
-        run: npm run build
-        run: npx prisma generate
+      - name: Build project
+        run: |
+          npm run build
+          ls -la node_modules/.prisma/client  # Verify Prisma client generation
 
       - name: Upload build artifact
-        uses: actions/upload-artifact@v4  # Updated to v4
+        uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+          path: |
+            .
+            !node_modules  # Exclude node_modules (they'll be installed fresh in Azure)
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    environment: production   # Optional but recommended
+    environment: production
 
     steps:
       - name: Download artifact
-        uses: actions/download-artifact@v4  # Updated to v4
+        uses: actions/download-artifact@v4
         with:
           name: node-app
+
+      - name: Install production dependencies
+        run: npm ci --omit=dev
+
+      - name: Generate Prisma client
+        run: npx prisma generate
 
       - name: Azure Login (OIDC)
         uses: azure/login@v1
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID}}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID}}
-          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID}}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-     
+      - name: Configure Azure Web App
+        run: |
+          az webapp config set \
+            --name ${{ env.AZURE_WEBAPP_NAME }} \
+            --resource-group Decentralize_group \
+            --startup-file "npm start" \
+            --linux-fx-version "NODE|20-lts"
+
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         id: deploy-step
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
           package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
-          slot-name: production  # Remove if not using slots
+          slot-name: production
