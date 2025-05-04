@@ -7,9 +7,9 @@ permissions:
   id-token: write   # Required for Azure OIDC auth
   contents: read
 env:
-  AZURE_WEBAPP_NAME: "Solara"         # Your Azure Web App name
+  AZURE_WEBAPP_NAME: "solara"         # Your Azure Web App name
   AZURE_WEBAPP_PACKAGE_PATH: "."      # Path to your app (root directory)
-  NODE_VERSION: "20.x"                # Node.js version
+  NODE_VERSION: "20.12.2"                # Node.js version
 
 jobs:
   build:
