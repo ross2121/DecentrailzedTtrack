@@ -3,7 +3,9 @@ name: Deploy Node.js to Azure Web App
 on:
   push:
     branches: [ "main" ]  # Adjust branch as needed
-
+permissions:
+  id-token: write   # Required for Azure OIDC auth
+  contents: read
 env:
   AZURE_WEBAPP_NAME: "Solara"         # Your Azure Web App name
   AZURE_WEBAPP_PACKAGE_PATH: "."      # Path to your app (root directory)
