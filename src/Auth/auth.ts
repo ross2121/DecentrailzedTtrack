@@ -49,7 +49,6 @@ router.post("/register",async(req,res:any)=>{
 
 }
 )
-
 router.post("/signin",async(req:any,res:any)=>{
     const {email,password}=req.body;
     const verify=LoginSchema.safeParse({email,password});
@@ -77,9 +76,9 @@ router.post("/signin",async(req:any,res:any)=>{
 //     return res.json({username:user.map((user)=>user.username)});
 // })
 router.post("/verify",async(req:any,res:any)=>{
-    const { code, name, email, password ,username} = req.body;
+    const { code, name, email, password ,username,avatar} = req.body;
     console.log("Received OTP:", code);
-    console.log("User data:", { name, email, password });
+    console.log("User data:", { name, email, password,avatar });
     if (parseInt(code) === parseInt(req.app.locals.OTP)) {
         req.app.locals.OTP = null;
         req.app.locals.resetSession = true;
@@ -102,6 +101,7 @@ router.post("/verify",async(req:any,res:any)=>{
                 publickey:keypair.publicKey.toBase58() ,
                  privatekey:encrypted,
                 username,
+                Avatar:avatar,
                 iv:iv.toString('hex')
             }
         })

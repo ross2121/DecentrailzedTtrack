@@ -77,6 +77,18 @@ router.post("/create/challenge", async (req: any, res: any) => {
     return res.status(500).json({ message: "Error creating Challenge", error });
   }
 });
+router.get("/step/daily/:userid",async(req:any,res:any)=>{
+  const id = req.params.userid;
+   if(!id){
+    return res.status(500).json({ message: "No id found"});
+   }
+   const user=await prisma.steps.findMany({
+    where:{
+      userid:id
+    }
+   })
+   return res.status(200).json({user})
+})
 router.get("/challenge/user/:id", async (req: any, res: any) => {
   const id = req.params.id;
   const challenge = await prisma.challenge.findUnique({
@@ -95,6 +107,7 @@ router.get("/challenge/public", async (req: any, res: any) => {
   const allchalange = await prisma.challenge.findMany({
     where: {
       type: "public",
+      status:"CurrentlyRunning"
     },
   });
   return res.status(200).json({ allchalange });
@@ -189,6 +202,7 @@ router.get("/challenge/private/:username", async (req: any, res: any) => {
         },
       ],
       type: "private",
+      status:"CurrentlyRunning"
     },
   });
   return res.status(200).json({ allchalange });
@@ -575,8 +589,8 @@ router.post("/regular/update", async (req: any, res: any) => {
 
   return res.status(200).json({ message: "Successfully updated the user" });
 });
+
 router.post("/challenge/finish", async (req: any, res: any) => {
-  console.log("check2");
   const { id } = req.body;
   const privatekey = process.env.PRIVATE_KEY;
   if (!privatekey) {
@@ -743,8 +757,7 @@ router.get("/challenge/info/:id", async (req: any, res: any) => {
   const effective = today > enddate ? enddate : today;
   const result: any = [];
   for (let i = 0; i < challenge.members.length; i++) {
-    const user = challenge.members[i];
-    console.log("sa");
+    const user = challenge.members[i];  
     const step = await prisma.steps.findMany({
       where: {
         userid: user,

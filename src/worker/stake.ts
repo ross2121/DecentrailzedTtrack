@@ -12,7 +12,7 @@ export async function getstake() {
       }
      })
      for(const payment of stakePayment){
-       await axios.post("http://localhost:3000/api/v1/stake/payout",{id:payment.id})     
+       await axios.post("https://decentralize-gpfwdje9e7guf4hu.canadacentral-01.azurewebsites.net/api/v1/stake/payout",{id:payment.id})     
      }
      for(let sta of stake ){
       const sleep=await prisma.sleep.findMany({where:{
@@ -59,7 +59,7 @@ export async function getstake() {
                 penalty = Math.min(penalty, sta.WithdrawAmount);
                 console.log("penalty",penalty);
                 if(sta.WithdrawAmount-penalty<0){
-                  await axios.post("http://localhost:3000/api/v1/destake",{id:sta.id})
+                  await axios.post("https://decentralize-gpfwdje9e7guf4hu.canadacentral-01.azurewebsites.net/api/v1/destake",{id:sta.id})
                 }
            const penaltyDate = new Date().toISOString().split('T')[0]
         sta= await prisma.stake.update({

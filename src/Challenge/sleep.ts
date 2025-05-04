@@ -79,6 +79,18 @@ router.post("/create/challenge/sleep",async(req:any,res:any)=>{
         return res.status(500).json({ message: "Error creating Challenge", error });
      }    
 })
+router.get("/sleep/daily/:userid",async(req:any,res:any)=>{
+  const id = req.params.userid;
+   if(!id){
+    return res.status(500).json({ message: "No id found"});
+   }
+   const user=await prisma.sleep.findMany({
+    where:{
+      userid:id
+    }
+   })
+   return res.status(200).json({user})
+})
 router.post("/sleep/verification",async(req:any,res:any)=>{
     const {startdate,enddate,userid,challengeid}=req.body;
     if(!startdate || !enddate||!userid||!challengeid){

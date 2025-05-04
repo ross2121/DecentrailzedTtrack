@@ -8,6 +8,7 @@ import { sleeprouter } from "./Challenge/sleep";
 import { Gettime } from "./worker/Step";
 import { stakerouter } from "./Challenge/Stake";
 import { getstake } from "./worker/stake";
+import { Getsleep } from "./worker/sleep";
 const app = express();
 app.use(express.json());
 app.use(cors());
@@ -23,8 +24,9 @@ app.get("/test", async (req: any, res: any) => {
   return res.json({ sol: trydd.data.solana.usd });
 });
 
-// Gettime();
+Gettime();
 getstake();
+Getsleep();
 const port = 3000;
 app.listen(port, () => {
   console.log(`Server is listening at ${port}`);
