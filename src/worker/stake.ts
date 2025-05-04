@@ -20,6 +20,7 @@ export async function getstake() {
        await axios.post(`${url}/stake/payout`,{id:payment.id})     
      }
      for(let sta of stake ){
+      console.log("dasd");
       const sleep=await prisma.sleep.findMany({where:{
         userid:sta.Userid
        }});

@@ -533,6 +533,7 @@ router.get("/total/steps", async (req: any, res: any) => {
   });
   const formattedSteps = users.map((user) => ({
     username: user.username,
+    avatar:user.Avatar,
     steps: user.step[0]?.steps || 0,
   }));
 

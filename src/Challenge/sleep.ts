@@ -86,17 +86,17 @@ router.post("/challenge/sleep/private",async(req:any,res:any)=>{
    if(!verify.success){
      return res.status(400).json({error:verify.error.errors})
    }
-   if(request.length+1 !==memberqty){
-    return res.status(400).json({error:"Select more friends to continue"})
-   }
+  //  if(request.length+1 !==memberqty){
+  //   return res.status(400).json({error:"Select more friends to continue"})
+  //  }
    const user=await prisma.user.findUnique({
     where:{
       id:userid
     }
    })
-
+   console.log(user);
    if(user==null){
-    return;
+    return res.status(400).json({message:"User not found"},);
    }
   
    const updatedRequest = [user.username, ...(request || [])];
@@ -209,6 +209,7 @@ router.get("/total/sleep", async (req: any, res: any) => {
     });
     const formattedSteps = users.map(user => ({
         username: user.username,
+        avatar:user.Avatar,
         steps: user.Sleep[0]?.Hours || 0,
     }));
     return res.status(200).json({ data: formattedSteps });

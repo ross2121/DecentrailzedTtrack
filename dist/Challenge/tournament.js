@@ -521,6 +521,7 @@ router.get("/total/steps", (req, res) => __awaiter(void 0, void 0, void 0, funct
         var _a;
         return ({
             username: user.username,
+            avatar: user.Avatar,
             steps: ((_a = user.step[0]) === null || _a === void 0 ? void 0 : _a.steps) || 0,
         });
     });

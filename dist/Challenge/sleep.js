@@ -99,16 +99,17 @@ router.post("/challenge/sleep/private", (req, res) => __awaiter(void 0, void 0, 
     if (!verify.success) {
         return res.status(400).json({ error: verify.error.errors });
     }
-    if (request.length + 1 !== memberqty) {
-        return res.status(400).json({ error: "Select more friends to continue" });
-    }
+    //  if(request.length+1 !==memberqty){
+    //   return res.status(400).json({error:"Select more friends to continue"})
+    //  }
     const user = yield prisma.user.findUnique({
         where: {
             id: userid
         }
     });
+    console.log(user);
     if (user == null) {
-        return;
+        return res.status(400).json({ message: "User not found" });
     }
     const updatedRequest = [user.username, ...(request || [])];
     console.log("dasd", updatedRequest);
@@ -223,6 +224,7 @@ router.get("/total/sleep", (req, res) => __awaiter(void 0, void 0, void 0, funct
         var _a;
         return ({
             username: user.username,
+            avatar: user.Avatar,
             steps: ((_a = user.Sleep[0]) === null || _a === void 0 ? void 0 : _a.Hours) || 0,
         });
     });
