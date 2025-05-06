@@ -6,8 +6,8 @@ dotenv.config();
 const url=process.env.BACKEND_URL
 const prisma = new PrismaClient();
 export async function getstake() {
-  const cronSchedule = `* * * * *`;
-  console.log(url);
+  const cronSchedule = `0 0 * * *`; 
+  // console.log(url);
   cron.schedule(cronSchedule, async () => {
      const stake=await prisma.stake.findMany({});
      const stakePayment=await prisma.stakePayment.findMany({
@@ -17,7 +17,7 @@ export async function getstake() {
      })
      console.log("heeu");
      for(const payment of stakePayment){
-       await axios.post(`${url}/stake/payout`,{id:payment.id})     
+       await axios.post(`"https://solara-azh3gzava8a0dvdr.canadacentral-01.azurewebsites.net/api/v1/stake/payout`,{id:payment.id})     
      }
      for(let sta of stake ){
       console.log("dasd");
@@ -73,7 +73,7 @@ export async function getstake() {
                 penalty = Math.min(penalty, sta.WithdrawAmount);
                 console.log("penalty",penalty);
                 if(sta.WithdrawAmount-penalty<0){
-                  await axios.post(`${url}/api/v1/destake`,{id:sta.id})
+                  await axios.post("https://solara-azh3gzava8a0dvdr.canadacentral-01.azurewebsites.net/api/v1/destake",{id:sta.id})
                 }
            const penaltyDate = new Date().toISOString().split('T')[0]
            console.log(penaltyDate);

@@ -3,13 +3,13 @@ import axios from "axios";
 import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 export async function Gettime() {
-  const cronSchedule = `* * * * *`;
+  const cronSchedule = `0 0 * * *`;
   cron.schedule(cronSchedule, async () => {
     const enddatespublic = await prisma.challenge.findMany({});
     for (const member of enddatespublic) {
       if (member.PayoutStatus == "payoutsucess") {
         const response = await axios.post(
-          "https://decentralize-gpfwdje9e7guf4hu.canadacentral-01.azurewebsites.net/api/v1/challenge/retry",
+          "https://solara-azh3gzava8a0dvdr.canadacentral-01.azurewebsites.net/api/v1/challenge/retry",
           { id: member.id }
         );
         const challengeid = await prisma.remainingPerson.findMany({
@@ -56,7 +56,7 @@ export async function Gettime() {
             const publicmember = member.members;
             for (const user of publicmember) {
               const response = await axios.post(
-                "https://decentralize-gpfwdje9e7guf4hu.canadacentral-01.azurewebsites.net/api/v1/step/verification",
+                "https://solara-azh3gzava8a0dvdr.canadacentral-01.azurewebsites.net/api/v1/step/verification",
                 {
                   startdate: member.startdate,
                   enddate: member.enddate,
@@ -67,7 +67,7 @@ export async function Gettime() {
               console.log("data", response.data);
             }
             const response = await axios.post(
-              "https://decentralize-gpfwdje9e7guf4hu.canadacentral-01.azurewebsites.net/api/v1/challenge/finish",
+              "https://solara-azh3gzava8a0dvdr.canadacentral-01.azurewebsites.net/api/v1/challenge/finish",
               { id: member.id }
             );
             console.log(response.data);

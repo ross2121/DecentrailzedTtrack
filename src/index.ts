@@ -27,9 +27,9 @@ app.get("/test", async (req: any, res: any) => {
   return res.json({ sol: trydd.data.solana.usd });
 });
 
-// Gettime();
+Gettime();
 getstake();
-// Getsleep();
+Getsleep();
 const port =process.env.PORT;
 console.log(port);
 app.listen(port, () => {
