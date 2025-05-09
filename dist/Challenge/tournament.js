@@ -719,6 +719,7 @@ router.get("/challenge/info/:id", (req, res) => __awaiter(void 0, void 0, void 0
             id: id,
         },
     });
+    // console.log("ch",challenge);
     if (!challenge) {
         return res
             .status(400)
@@ -729,38 +730,63 @@ router.get("/challenge/info/:id", (req, res) => __awaiter(void 0, void 0, void 0
     const today = new Date().toISOString().split("T")[0];
     const effective = today > enddate ? enddate : today;
     const result = [];
-    for (let i = 0; i < challenge.members.length; i++) {
-        const user = challenge.members[i];
-        const step = yield prisma.steps.findMany({
-            where: {
-                userid: user,
-                day: {
-                    gte: startdate,
-                    lte: effective,
+    if (challenge.types == "Sleep") {
+        for (let i = 0; i < challenge.members.length; i++) {
+            const user = challenge.members[i];
+            console.log("one", challenge);
+            const sleep = yield prisma.sleep.findMany({
+                where: {
+                    userid: user,
+                    day: {
+                        gte: startdate,
+                        lte: effective,
+                    }
                 },
-            },
-            select: {
-                day: true,
-                steps: true,
-            },
-        });
-        const users = yield prisma.user.findUnique({
-            where: {
-                id: user,
-            },
-        });
-        if (step.length === 0) {
-            result.push({
-                username: users === null || users === void 0 ? void 0 : users.username,
-                steps: 0,
-                day: new Date().toISOString().split("T")[0],
+                select: {
+                    day: true,
+                    Hours: true
+                }
             });
-        }
-        else {
-            step.forEach((step) => {
+            const users = yield prisma.user.findUnique({
+                where: {
+                    id: user,
+                },
+            });
+            sleep.forEach((step) => {
                 result.push({
                     username: users === null || users === void 0 ? void 0 : users.username,
-                    steps: step.steps,
+                    Hours: step.Hours,
+                    day: step.day,
+                });
+            });
+        }
+    }
+    else {
+        for (let i = 0; i < challenge.members.length; i++) {
+            const users = challenge.members[i];
+            console.log("slele");
+            const step = yield prisma.steps.findMany({
+                where: {
+                    userid: users,
+                    day: {
+                        gte: startdate,
+                        lte: effective,
+                    },
+                },
+                select: {
+                    day: true,
+                    steps: true,
+                },
+            });
+            const user = yield prisma.user.findUnique({
+                where: {
+                    id: users
+                }
+            });
+            step.forEach((step) => {
+                result.push({
+                    username: user === null || user === void 0 ? void 0 : user.username,
+                    Steps: step.steps,
                     day: step.day,
                 });
             });

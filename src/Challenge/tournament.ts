@@ -742,11 +742,13 @@ router.get("/challenge/info/:id", async (req: any, res: any) => {
   if (!id) {
     return res.status(400).json({ message: "No user found" });
   }
+
   const challenge = await prisma.challenge.findUnique({
     where: {
       id: id,
     },
   });
+  // console.log("ch",challenge);
   if (!challenge) {
     return res
       .status(400)
@@ -757,37 +759,64 @@ router.get("/challenge/info/:id", async (req: any, res: any) => {
   const today = new Date().toISOString().split("T")[0];
   const effective = today > enddate ? enddate : today;
   const result: any = [];
-  for (let i = 0; i < challenge.members.length; i++) {
-    const user = challenge.members[i];  
-    const step = await prisma.steps.findMany({
-      where: {
-        userid: user,
-        day: {
-          gte: startdate,
-          lte: effective,
+  if(challenge.types=="Sleep"){
+    for (let i = 0; i < challenge.members.length; i++) {
+      const user = challenge.members[i];  
+      console.log("one",challenge);
+  
+        const sleep=await prisma.sleep.findMany({
+          where:{
+            userid:user,
+            day:{
+              gte:startdate,
+              lte:effective,
+            }
+          },
+          select:{
+            day:true,
+            Hours:true
+          }
+        })
+        const users = await prisma.user.findUnique({
+          where: {
+            id: user,
+          },
+        });
+          sleep.forEach((step) => {
+            result.push({
+              username: users?.username,
+              Hours: step.Hours,
+              day: step.day,
+            });
+          });
+      
+  }}
+ else{
+    for(let i=0;i<challenge.members.length;i++){
+      const users = challenge.members[i]; 
+      console.log("slele");
+      const step = await prisma.steps.findMany({
+        where: {
+          userid:users,
+          day: {
+            gte: startdate,
+            lte: effective,
+          },
         },
-      },
-      select: {
-        day: true,
-        steps: true,
-      },
-    });
-    const users = await prisma.user.findUnique({
-      where: {
-        id: user,
-      },
-    });
-    if (step.length === 0) {
-      result.push({
-        username: users?.username,
-        steps: 0,
-        day: new Date().toISOString().split("T")[0],
+        select: {
+          day: true,
+          steps: true,
+        },
       });
-    } else {
+      const user=await  prisma.user.findUnique({
+        where:{
+          id:users
+        }
+      })
       step.forEach((step) => {
         result.push({
-          username: users?.username,
-          steps: step.steps,
+          username: user?.username,
+          Steps: step.steps,
           day: step.day,
         });
       });

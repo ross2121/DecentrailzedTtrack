@@ -4,6 +4,12 @@ import { Staketype } from "../Auth/type";
 import { Transaction } from "@solana/web3.js";
 import crypto from "crypto";
 import { recivetransaction, sendtrasaction } from "./trxn";
+interface challenge{
+  username:string,
+  steps?:Number,
+  day:string,
+  Hours?:String
+}
 const prisma = new PrismaClient();
 const router = Router();
 const algorithm = "aes-256-cbc";
@@ -111,6 +117,48 @@ router.get("/getstake/:userid", async (req: any, res: any) => {
   });
   return res.status(200).json({ message: "stake created successfully", stake });
 });
+// router.get("/challenge/:infoid",async(req:any,res:any)=>{
+//   const {infoid}=req.params;
+// let result:[challenge]=[{username:"",steps:0,day:""}];
+//   if(!infoid){
+//     return res.json({message:"No info id found"});
+//   }
+//   const challenge=await prisma.challenge.findUnique({
+//     where:{
+//       id:infoid
+//     }
+//   })
+//   if(!challenge){
+//     return res.status(400).json({message:"No challenge found"})
+//   }
+//   const user=challenge.members;
+//   user.map(async(users)=>{
+//       const user=await prisma.user.findUnique({
+//           where:{
+//             id:users
+//           }
+//       })
+//       if(!user){
+//         return res.status(440).json({message:"No user found for particular id"});
+//       }
+//       const date=new Date();
+//       const dats=date.toISOString().split
+//       if(challenge.types="Sleep"){
+//         const sleep=await prisma.sleep.findFirst({
+//           where:{
+//             userid:user.id
+//           }
+//         })
+//       }
+//       const steps=await prisma.steps.findUnique({
+//         where:{
+//           userid
+//         }
+//       }) 
+//      result.push({username:user?.username,steps:Number(steps?.steps),day:steps?.day||""})
+//   })
+//   return res.status(200).json({result});
+// })
 router.post("/stake/verification", async (req: any, res: any) => {
   const { Stakeid } = req.body;
   await prisma.stake.update({

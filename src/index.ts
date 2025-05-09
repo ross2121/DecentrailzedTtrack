@@ -10,6 +10,7 @@ import { stakerouter } from "./Challenge/Stake";
 import dotenv from "dotenv"
 import { getstake } from "./worker/stake";
 import { Getsleep } from "./worker/sleep";
+import { StakeCronrouter } from "./Challenge/worker";
 const app = express();
 app.use(express.json());
 app.use(cors());
@@ -19,6 +20,7 @@ app.use("/api/v1", challenges);
 app.use("/api/v1", sleeprouter);
 app.use("/api/v1", Friend);
 app.use("/api/v1", stakerouter);
+app.use("/api/v1",StakeCronrouter);
 app.get("/test", async (req: any, res: any) => {
   console.log("ewe");
   const trydd = await axios.get(
