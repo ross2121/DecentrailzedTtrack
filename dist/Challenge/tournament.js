@@ -730,10 +730,10 @@ router.get("/challenge/info/:id", (req, res) => __awaiter(void 0, void 0, void 0
     const today = new Date().toISOString().split("T")[0];
     const effective = today > enddate ? enddate : today;
     const result = [];
+    const username = [];
     if (challenge.types == "Sleep") {
         for (let i = 0; i < challenge.members.length; i++) {
             const user = challenge.members[i];
-            console.log("one", challenge);
             const sleep = yield prisma.sleep.findMany({
                 where: {
                     userid: user,
@@ -752,6 +752,10 @@ router.get("/challenge/info/:id", (req, res) => __awaiter(void 0, void 0, void 0
                     id: user,
                 },
             });
+            // if(!users){
+            //   return res.
+            // }
+            username.push(users === null || users === void 0 ? void 0 : users.username);
             sleep.forEach((step) => {
                 result.push({
                     username: users === null || users === void 0 ? void 0 : users.username,
@@ -783,6 +787,7 @@ router.get("/challenge/info/:id", (req, res) => __awaiter(void 0, void 0, void 0
                     id: users
                 }
             });
+            username.push(user === null || user === void 0 ? void 0 : user.username);
             step.forEach((step) => {
                 result.push({
                     username: user === null || user === void 0 ? void 0 : user.username,
@@ -794,7 +799,7 @@ router.get("/challenge/info/:id", (req, res) => __awaiter(void 0, void 0, void 0
     }
     return res
         .status(200)
-        .json({ result, startdate: startdate, enddate: enddate });
+        .json({ result, startdate: startdate, enddate: enddate, user: username });
 }));
 router.post("/challenge/acceptchallenge", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { chaalengeid, userid, username, tx } = req.body;
