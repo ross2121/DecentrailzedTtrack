@@ -739,6 +739,7 @@ router.post("/challenge/private", async (req: any, res: any) => {
 });
 router.get("/challenge/info/:id", async (req: any, res: any) => {
   const id = req.params.id;
+  console.log(id);
   if (!id) {
     return res.status(400).json({ message: "No user found" });
   }
@@ -828,9 +829,15 @@ router.get("/challenge/info/:id", async (req: any, res: any) => {
       });
     }
   }
+let Target;
+if(challenge.types="Sleep"){
+  Target=challenge.Hours
+}else{
+  Target=challenge.Dailystep
+}
   return res
     .status(200)
-    .json({ result, startdate: startdate, enddate: enddate,user:username });
+    .json({ result, startdate: startdate, enddate: enddate,user:username,name:challenge.name,target:Target });
 });
 router.post("/challenge/acceptchallenge", async (req: any, res: any) => {
   const { chaalengeid, userid, username, tx } = req.body;
