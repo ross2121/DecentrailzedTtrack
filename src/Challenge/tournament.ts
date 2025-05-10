@@ -837,7 +837,7 @@ if(challenge.types="Sleep"){
 }
   return res
     .status(200)
-    .json({ result, startdate: startdate, enddate: enddate,user:username,name:challenge.name,target:Target });
+    .json({ result, startdate: startdate, enddate: enddate,user:username,name:challenge.name,target:Target,amount:challenge.Amount,Currently:challenge.memberqty,days:challenge.days,type:challenge.types });
 });
 router.post("/challenge/acceptchallenge", async (req: any, res: any) => {
   const { chaalengeid, userid, username, tx } = req.body;
