@@ -784,13 +784,13 @@ router.get("/challenge/info/:id", async (req: any, res: any) => {
         // if(!users){
         //   return res.
         // }
-        username.push(users?.username);
+        username.push({username:users?.username,avatar:users?.Avatar});
           sleep.forEach((step) => {
             result.push({
               username: users?.username,
               Hours: step.Hours,
               day: step.day,
-              avatar:users?.Avatar
+              // avatar:users?.Avatar
             });
           });
       
@@ -817,13 +817,13 @@ router.get("/challenge/info/:id", async (req: any, res: any) => {
           id:users
         }
       })
-      username.push(user?.username);
+      username.push({username:user?.username,avatar:user?.Avatar});
       step.forEach((step) => {
         result.push({
           username: user?.username,
           Steps: step.steps,
           day: step.day,
-          avatar:user?.Avatar
+          // avatar:user?.Avatar
         });
       });
     }
