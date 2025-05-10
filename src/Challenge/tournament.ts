@@ -830,9 +830,11 @@ router.get("/challenge/info/:id", async (req: any, res: any) => {
     }
   }
 let Target;
-if(challenge.types="Sleep"){
+console.log("type",challenge.types)
+if(challenge.types=="Sleep"){
   Target=challenge.Hours
 }else{
+  console.log("ehh");
   Target=challenge.Dailystep
 }
   return res
