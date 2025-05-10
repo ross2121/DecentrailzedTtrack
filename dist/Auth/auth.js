@@ -87,9 +87,9 @@ router.post("/signin", (req, res) => __awaiter(void 0, void 0, void 0, function*
 //     return res.json({username:user.map((user)=>user.username)});
 // })
 router.post("/verify", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { code, name, email, password, username, avatar } = req.body;
+    const { code, name, email, password, username } = req.body;
     console.log("Received OTP:", code);
-    console.log("User data:", { name, email, password, avatar });
+    console.log("User data:", { name, email, password });
     if (parseInt(code) === parseInt(req.app.locals.OTP)) {
         req.app.locals.OTP = null;
         req.app.locals.resetSession = true;
@@ -103,6 +103,20 @@ router.post("/verify", (req, res) => __awaiter(void 0, void 0, void 0, function*
         try {
             const salt = yield bcrypt_1.default.genSalt(10);
             const hashpassword = yield bcrypt_1.default.hash(password, salt);
+            const avatarurl = [
+                "https://img.freepik.com/free-photo/beautiful-anime-new-year-s-eve-scene_23-2151038098.jpg?t=st=1746870065~exp=1746873665~hmac=55afbb911dc28ac3ada8c13095a482f5b960b3291feb37f15100a4c824b78c43&w=1800",
+                "https://img.freepik.com/free-photo/illustration-anime-character-rain_23-2151394695.jpg?t=st=1746870090~exp=1746873690~hmac=e3f8f68015a9dff61b9060caca6eda4ec47aa1c07f217f93cb9d692e63211c3a&w=1800",
+                "https://img.freepik.com/premium-vector/young-explorer-editable-colors-anime-vector_1257632-131.jpg?w=900",
+                "https://img.freepik.com/free-vector/hand-drawn-anime-kawaii-illustration_52683-123747.jpg?t=st=1746870157~exp=1746873757~hmac=41d188d51d62c1433595ce432245ca270c98ee8dda8addf7dbbbc03496373765&w=900",
+                "https://img.freepik.com/premium-vector/sad-young-anime-boy-black-outfit-vector-isolated-illustration_419911-1834.jpg?ga=GA1.1.437260065.1746285969&semt=ais_hybrid&w=740",
+                "https://img.freepik.com/free-photo/androgynous-avatar-non-binary-queer-person_23-2151100224.jpg?t=st=1746870210~exp=1746873810~hmac=4f41078428b650dd918fa7689a2a822417bc53797135e7c6b7327e2b966327fb&w=900",
+                "https://img.freepik.com/free-photo/anime-style-chinese-new-year-celebration-scene_23-2151079957.jpg?ga=GA1.1.437260065.1746285969&semt=ais_hybrid&w=740",
+                "https://img.freepik.com/free-photo/anime-character-winter_23-2151843502.jpg?ga=GA1.1.437260065.1746285969&semt=ais_hybrid&w=740",
+                "https://img.freepik.com/premium-photo/chubby-cute-boy-sneakers-black-hoodie_1003686-46095.jpg?ga=GA1.1.437260065.1746285969&semt=ais_hybrid&w=740",
+                "https://img.freepik.com/free-photo/anime-character-celebrating-christmas_23-2150970289.jpg?ga=GA1.1.437260065.1746285969&semt=ais_hybrid&w=740",
+                "https://img.freepik.com/free-photo/medium-shot-anime-style-man-portrait_23-2151067428.jpg?ga=GA1.1.437260065.1746285969&semt=ais_hybrid&w=740"
+            ];
+            const randomAvatar = avatarurl[Math.floor(Math.random() * avatarurl.length)];
             yield prisma.$transaction((prisma) => __awaiter(void 0, void 0, void 0, function* () {
                 const user = yield prisma.user.create({
                     data: {
@@ -112,7 +126,7 @@ router.post("/verify", (req, res) => __awaiter(void 0, void 0, void 0, function*
                         publickey: keypair.publicKey.toBase58(),
                         privatekey: encrypted,
                         username,
-                        Avatar: avatar,
+                        Avatar: randomAvatar,
                         iv: iv.toString('hex')
                     }
                 });

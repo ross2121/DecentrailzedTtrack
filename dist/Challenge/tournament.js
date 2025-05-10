@@ -761,6 +761,7 @@ router.get("/challenge/info/:id", (req, res) => __awaiter(void 0, void 0, void 0
                     username: users === null || users === void 0 ? void 0 : users.username,
                     Hours: step.Hours,
                     day: step.day,
+                    avatar: users === null || users === void 0 ? void 0 : users.Avatar
                 });
             });
         }
@@ -793,6 +794,7 @@ router.get("/challenge/info/:id", (req, res) => __awaiter(void 0, void 0, void 0
                     username: user === null || user === void 0 ? void 0 : user.username,
                     Steps: step.steps,
                     day: step.day,
+                    avatar: user === null || user === void 0 ? void 0 : user.Avatar
                 });
             });
         }

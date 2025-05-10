@@ -790,6 +790,7 @@ router.get("/challenge/info/:id", async (req: any, res: any) => {
               username: users?.username,
               Hours: step.Hours,
               day: step.day,
+              avatar:users?.Avatar
             });
           });
       
@@ -822,6 +823,7 @@ router.get("/challenge/info/:id", async (req: any, res: any) => {
           username: user?.username,
           Steps: step.steps,
           day: step.day,
+          avatar:user?.Avatar
         });
       });
     }
