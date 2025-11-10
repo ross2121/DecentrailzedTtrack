@@ -1,21 +1,19 @@
 {
+"version": 2,
+"builds": [{ "src": "dist/index.js", "use": "@vercel/node" }],
+"routes": [
+  {
+    "src": "/(.*)",
+    "dest": "dist/index.js"
+  }
+],
+"crons": [
+  {
+    "path": "/api/every-day",
+    "schedule": "0 0 * * *"
+  } ],
+     "public": true,
   "buildCommand": "npm run build",
-  "installCommand": "npm install",
-  "crons": [
-    {
-      "path": "/api/every-day",
-      "schedule": "0 0 * * *"
-    }
-  ],
-  "functions": {
-    "dist/index.js": {
-      "maxDuration": 30
-    }
-  },
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/api/index.js"
-    }
-  ]
+     "installCommand": "npm install"
+   
 }
