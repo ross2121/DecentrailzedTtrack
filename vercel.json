@@ -11,7 +11,8 @@
   {
     "path": "/api/every-day",
     "schedule": "0 0 * * *"
-  } ],
+  }
+ ],
      "public": true,
   "buildCommand": "npm run build",
      "installCommand": "npm install"
