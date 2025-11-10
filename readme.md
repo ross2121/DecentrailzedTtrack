@@ -10,7 +10,13 @@ This repository contains the backend implementation for a decentralized betting 
 - **Blockchain Interaction**: Facilitates communication with the Solana blockchain for transaction execution and data retrieval.
 - **Cron Job Functionality**: Automates periodic tasks to ensure smooth operation of the betting platform.
 
+   
 
+
+   
+
+
+   
 
 
 ## Cron Job Functionality
